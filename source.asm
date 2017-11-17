@@ -1,18 +1,83 @@
-PrintString MACRO String
-    PUSHA
-    MOV BX, offset String
+DrawMaze MACRO
+    PUSHA    
     
-    PrintAgain:
-        MOV AH, 2
-        MOV DL, [BX]
-        INT 21H
-        INC BX
-        CMP [BX], '$'
-        JNZ PrintAgain
+    
+        RandomizeMaze        
+        CalculateAddress
+        
+        MOV BX, ADDRESS
+                        
+            
+        PRINT:
+            MOV AH, 2
+            MOV DL, [BX]
+            INT 21H
+            INC BX
+            CMP [BX], '$'
+            JNZ PRINT
     
     POPA
                 
-ENDM PrintString   
+ENDM DrawMaze   
+
+
+RandomizeMaze MACRO 
+    PUSHA
+  
+        ; GET SYSTEM TIME
+        MOV AH, 2CH
+        INT 21H
+        
+        ; MOVE HUNDREDTHS OF SECOND TO AX
+        MOV AL, DL
+        CBW
+        
+        ; TAKE HUNDREDTHS OF SECOND MOD NUMBER OF MAZES TO GET A RANDOM NUMBER
+        DIV MAZES_N
+        MOV MAZE_NO, AH
+
+        
+    POPA
+        
+ENDM RandomizeMaze
+
+CalculateAddress MACRO 
+    PUSHA
+    
+        CMP MODE, 0    ; CHECK IF THE MODE IS EASY
+        JNZ HARD_MAZE  ; IF NOT GO TO HARD MAZE
+        
+        EASY_MAZE:
+        
+            MOV BX, offset MAZE_E
+            JMP CONTINUE
+        
+        HARD_MAZE:               
+        
+            MOV BX, offset MAZE_H                               
+        
+        CONTINUE:
+        
+            MOV CL, MAZE_NO     
+            MOV CH, 0
+            
+            ; CALCULATE OFFSET OF THE RANDOMLY SELECTED MAZE FROM THE BASE INDEX 
+            MOV AX, ROWS
+            MOV DX, COLS
+            MUL DX                                               
+            ADD AX, 1       ; FOR THE '$' AT THE END OF THE STRING
+            MUL CX
+            
+            ; ADD OFFSET TO INDEX OF MAZE TO BE PRINTED
+            ADD BX, AX
+            
+            ; SAVE IT TO ADDRESS VARIABLE
+            MOV ADDRESS, BX                        
+
+    POPA
+        
+ENDM CalculateAddress
+
 
 
 
@@ -43,16 +108,18 @@ ENDM GetIndex
         .DATA
           
 MAZE_NO DB       0  ; THE ORDER NUBMBER OF THE MAZE INSIDE THE MODE
-MODE    DB       0  ; 0->EASY  ,  1->HARD
-ROWS    DB       81 ; NUMBER OF CHARS IN THE ROW
-COL     DB       21 ; NUMBER OF CHARS IN THE COL
+MAZES_N DB       3  ; NUMBER OF MAZES AVAILABLE FOR EACH MODE
+MODE    DB       1  ; 0->EASY  ,  1->HARD
+ROWS    DW       81 ; NUMBER OF CHARS IN THE ROW
+COLS    DW       21 ; NUMBER OF CHARS IN THE COL
 INDEX   DB       ?  ; INDEX RETURNED BY GET_INDEX MACRO                                                                                    
+ADDRESS DW       ?  ; ADDRESS OF THE FIRST BYTE OF THE DRAWN MAZE
 
 
-
+; MAXIMUM NUMBER OF MAZES IN EACH MODE IS: 13
         ; 26, 10, 3, 2
                 
-MAZE_E  DB       '+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+',10,13
+MAZE_E  DB       '+--+1-+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+',10,13
         DB       '         |     |              |     |           |  |           |              |',10,13
         DB       '+  +--+  +  +  +  +--+--+  +--+  +  +  +--+--+  +  +  +--+--+  +  +--+  +--+--+',10,13
         DB       '|  |     |  |     |     |     |  |  |     |     |     |           |     |     |',10,13
@@ -76,7 +143,7 @@ MAZE_E  DB       '+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+-
         DB       '$'
   
         
-        DB       '+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+',10,13
+        DB       '+--+2-+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+',10,13
         DB       '                  |        |     |        |           |     |        |        |',10,13
         DB       '+  +--+--+--+--+  +  +--+--+  +--+  +--+  +  +--+--+  +  +--+  +--+  +--+--+  +',10,13
         DB       '|  |           |  |  |     |  |     |     |  |     |  |     |     |           |',10,13
@@ -100,7 +167,7 @@ MAZE_E  DB       '+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+-
         DB       '$'
         
         
-        DB       '+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+',10,13
+        DB       '+--+3-+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+',10,13
         DB       '      |  |        |     |     |     |     |              |     |     |     |  |',10,13
         DB       '+--+  +  +  +--+  +  +  +  +  +  +  +  +  +--+--+  +--+  +--+  +  +  +--+  +  +',10,13
         DB       '|  |  |     |     |  |     |  |  |     |        |  |  |     |  |  |     |     |',10,13
@@ -126,7 +193,7 @@ MAZE_E  DB       '+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+-
           
           
         ; 39, 10, 2, 2
-MAZE_H  DB       '+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+',10,13
+MAZE_H  DB       '+-+1+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+',10,13
         DB       '    |   |                   |         |         |   |     |   |           |   |',10,13
         DB       '+-+ + +-+ +-+-+ +-+-+-+-+-+ + +-+-+-+ + +-+-+-+-+ + +-+-+ + +-+ +-+-+-+-+ + + +',10,13
         DB       '|   |         | |         | | |   | | |           |   |   |     |   | |   | | |',10,13
@@ -149,7 +216,7 @@ MAZE_H  DB       '+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
         DB       '+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+',10,13
         DB       '$'
         
-        DB       '+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+',10,13
+        DB       '+-+2+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+',10,13
         DB       '  |     |     |       |       |   |   |   |         |   |         |   |   |   |',10,13
         DB       '+ + + + + +-+ + +-+ + + +-+-+ +-+ + + + + + + +-+-+ + + + +-+ +-+-+ + + + +-+ +',10,13
         DB       '|   | | | |   | |   |   |   | |   | | | |   |   |   | | |   |   |   |   |     |',10,13
@@ -172,7 +239,7 @@ MAZE_H  DB       '+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
         DB       '+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+',10,13
         DB       '$'
         
-        DB       '+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+',10,13
+        DB       '+-+3+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+',10,13
         DB       '  |         |   |   |     |   |     |   |   |   |         |     |     |     | |',10,13
         DB       '+ + +-+-+-+ + + +-+ + + +-+ + + +-+ + +-+ + +-+ +-+-+-+-+ + +-+ + +-+ + +-+ + +',10,13
         DB       '| | | |     | |     | |   | |     |   |   |   | |     |   |   | |   | |   |   |',10,13
@@ -201,19 +268,19 @@ MAIN    PROC FAR
         MOV AX,@DATA
         MOV DS,AX
         
+        DrawMaze
         
-        PrintString MAZE_E
-        
-       ; MOV AH,02
-;        MOV BH,00
-         MOV DL,78 ; BL 3RD   X
-         MOV DH,00 ; BL TOL   Y
-;        INT 10H
-        GetIndex dl,dh
-        mov ah,2
-        mov dl,'M'
-        int 21h
-        
+;        
+;       ; MOV AH,02
+;;        MOV BH,00
+;         MOV DL,78 ; BL 3RD   X
+;         MOV DH,00 ; BL TOL   Y
+;;        INT 10H
+;        GetIndex dl,dh
+;        mov ah,2
+;        mov dl,'M'
+;        int 21h
+;        
         HLT
 MAIN    ENDP
         END MAIN
