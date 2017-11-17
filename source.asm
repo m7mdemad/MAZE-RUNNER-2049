@@ -6,8 +6,9 @@ DrawMaze MACRO
         CalculateAddress
         
         MOV BX, ADDRESS
-                        
-            
+                         
+                         
+        ; PRINT AS LONG AS IT DIDN'T REACH '$' (SAME AS INT 21H , AH = 9)    
         PRINT:
             MOV AH, 2
             MOV DL, [BX]
@@ -107,14 +108,15 @@ ENDM GetIndex
         .STACK 64
         .DATA
           
-MAZE_NO DB       0  ; THE ORDER NUBMBER OF THE MAZE INSIDE THE MODE
-MAZES_N DB       3  ; NUMBER OF MAZES AVAILABLE FOR EACH MODE
-MODE    DB       1  ; 0->EASY  ,  1->HARD
-ROWS    DW       81 ; NUMBER OF CHARS IN THE ROW
-COLS    DW       21 ; NUMBER OF CHARS IN THE COL
-INDEX   DB       ?  ; INDEX RETURNED BY GET_INDEX MACRO                                                                                    
-ADDRESS DW       ?  ; ADDRESS OF THE FIRST BYTE OF THE DRAWN MAZE
-
+MAZE_NO     DB       0  ; THE ORDER NUBMBER OF THE MAZE INSIDE THE MODE
+MAZES_N     DB       38 ; NUMBER OF MAZES AVAILABLE FOR EACH MODE
+MODE        DB       1  ; 0->EASY  ,  1->HARD
+ROWS        DW       81 ; NUMBER OF CHARS IN THE ROW
+COLS        DW       21 ; NUMBER OF CHARS IN THE COL
+INDEX       DB       ?  ; INDEX RETURNED BY GET_INDEX MACRO          
+EASY_MAZE   DB  "MAZE_E.txt",0
+HARD_MAZE   DB  "MAZE_H.txt",0
+MAZE        DB  2000 DUP('$')
 
 ; MAXIMUM NUMBER OF MAZES IN EACH MODE IS: 13
         ; 26, 10, 3, 2
