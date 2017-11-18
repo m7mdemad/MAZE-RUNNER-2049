@@ -1,10 +1,27 @@
 DrawMaze MACRO
     PUSHA    
     
-    
         RandomizeMaze 
-        LoadMaze       
-        
+        LoadMaze
+
+		; CLEAR THE SCREEN
+		MOV AH, 06
+		MOV AL, 00
+		MOV BH, 07
+		MOV CH, 00
+		MOV CL, 00
+		MOV DH, 24
+		MOV DL, 79
+		INT 10H
+    
+		; MOVE CURSOR TO START OF SCREEN
+		MOV AH, 02
+		MOV BH, 00
+		MOV DL, 00
+		MOV DH, 00
+		INT 10H
+		
+		
         MOV BX, OFFSET MAZE
                          
                          
