@@ -1,0 +1,341 @@
+
+GetIndex MACRO X,Y
+    PUSHA
+  
+    MOV BL,Y
+    MOV AL,81
+    MUL BL
+    MOV BL, X
+    MOV BH, 0
+    ADD AX, BX
+    MOV INDEX, AX
+        
+    POPA
+        
+ENDM GetIndex
+
+
+HandlePlayerMovement MACRO
+    PUSHA
+		
+		LOCAL MOVE_UP
+		LOCAL MOVE_RIGHT
+		LOCAL CONTINUE
+		
+		;; CHECK IF A KEY WAS PRESSED
+		MOV AH, 01
+		INT 16H
+		JZ CONTINUE
+		
+		
+		CMP AH, UP_ARROW
+		JZ MOVE_UP1
+		
+		CMP AH, LEFT_ARROW
+		JZ MOVE_LEFT1
+		
+		CMP AH, DOWN_ARROW
+		JZ MOVE_DOWN1
+		
+		CMP AH, RIGHT_ARROW
+		JZ MOVE_RIGHT1
+		
+		CMP AH, W_LETTER
+		JZ MOVE_UP2
+		
+		CMP AH, A_LETTER
+		JZ MOVE_LEFT2
+		
+		CMP AH, S_LETTER
+		JZ MOVE_DOWN2
+		
+		CMP AH, D_LETTER
+		JZ MOVE_RIGHT2
+		
+		JMP CONTINUE
+		
+		
+		
+		MOVE_UP1:
+			ClearPosition X1, Y1
+			MoveUp X1, Y1
+			FlushBuffer
+			JMP CONTINUE
+
+		MOVE_LEFT1:
+			ClearPosition X1, Y1
+			MoveLeft X1, Y1
+			FlushBuffer
+			JMP CONTINUE
+
+		MOVE_DOWN1:
+			ClearPosition X1, Y1
+			MoveDown X1, Y1
+			FlushBuffer
+			JMP CONTINUE
+			
+		MOVE_RIGHT1:
+			ClearPosition X1, Y1
+			MoveRight X1, Y1
+			FlushBuffer
+			JMP CONTINUE
+
+		MOVE_UP2:
+			ClearPosition X2, Y2
+			MoveUp X2, Y2
+			FlushBuffer
+			JMP CONTINUE
+
+		MOVE_LEFT2:
+			ClearPosition X2, Y2
+			MoveLeft X2, Y2
+			FlushBuffer
+			JMP CONTINUE
+
+		MOVE_DOWN2:
+			ClearPosition X2, Y2
+			MoveDown X2, Y2
+			FlushBuffer
+			JMP CONTINUE
+			
+		MOVE_RIGHT2:
+			ClearPosition X2, Y2
+			MoveRight X2, Y2
+			FlushBuffer
+			JMP CONTINUE
+
+
+    
+    
+		CONTINUE:
+		
+    
+    POPA
+ENDM HandlePlayerMovement
+    
+    
+MoveUp	MACRO	X,Y
+	PUSHA
+		
+		LOCAL MAKE_PEEP
+		LOCAL CONTINUE
+		
+		;; SUBTRACT 1 FROM Y TO REPRESENT GOING UPWARDS
+		MOV CL, Y
+		SUB CL, 1
+		
+		;; GET INDEX OF X,Y PLACE IN THE MAZE ARRAY
+		GetIndex X, CL
+		
+		;; CHECK IF THE MAZE IS EMPTY AT THAT INDEX
+		MOV BX, INDEX
+		CMP MAZE[BX], ' '
+		JNZ MAKE_PEEP
+
+		
+		;; CHANGE THE Y POSITION OF THE PLAYER TO THE NEW POSITION
+		MOV Y, CL
+		
+		JMP CONTINUE
+		
+		
+		MAKE_PEEP:
+			Peep
+		
+		CONTINUE:
+			
+	
+	POPA
+ENDM MoveUp
+
+MoveLeft	MACRO	X,Y
+	PUSHA
+		
+		LOCAL MAKE_PEEP
+		LOCAL CONTINUE
+		
+		;; ADD 1 TO X TO REPRESENT GOING RIGHT
+		MOV CL, X
+		SUB CL, 1
+		
+		;; GET INDEX OF X,Y PLACE IN THE MAZE ARRAY
+		GetIndex CL, Y
+		
+		;; CHECK IF THE MAZE IS EMPTY AT THAT INDEX
+		MOV BX, INDEX
+		CMP MAZE[BX], ' '
+		JNZ MAKE_PEEP
+
+		;; CHANGE THE X POSITION OF THE PLAYER TO THE NEW POSITION
+		MOV X, CL
+		
+		JMP CONTINUE
+		
+		
+		MAKE_PEEP:
+			Peep
+		
+		CONTINUE:
+			
+	
+	POPA
+ENDM MoveLeft
+
+MoveDown	MACRO	X,Y
+	PUSHA
+		
+		LOCAL MAKE_PEEP
+		LOCAL CONTINUE
+		
+		;; SUBTRACT 1 FROM Y TO REPRESENT GOING UPWARDS
+		MOV CL, Y
+		ADD CL, 1
+		
+		;; GET INDEX OF X,Y PLACE IN THE MAZE ARRAY
+		GetIndex X, CL
+		
+		;; CHECK IF THE MAZE IS EMPTY AT THAT INDEX
+		MOV BX, INDEX
+		CMP MAZE[BX], ' '
+		JNZ MAKE_PEEP
+
+		
+		;; CHANGE THE Y POSITION OF THE PLAYER TO THE NEW POSITION
+		MOV Y, CL
+		
+		JMP CONTINUE
+		
+		
+		MAKE_PEEP:
+			Peep
+		
+		CONTINUE:
+			
+	
+	POPA
+ENDM MoveDown
+
+MoveRight	MACRO	X,Y
+	PUSHA
+		
+		LOCAL MAKE_PEEP
+		LOCAL CONTINUE
+		
+		;; ADD 1 TO X TO REPRESENT GOING RIGHT
+		MOV CL, X
+		ADD CL, 1
+		
+		;; GET INDEX OF X,Y PLACE IN THE MAZE ARRAY
+		GetIndex CL, Y
+		
+		;; CHECK IF THE MAZE IS EMPTY AT THAT INDEX
+		MOV BX, INDEX
+		CMP MAZE[BX], ' '
+		JNZ MAKE_PEEP
+
+
+		;; CHANGE THE X POSITION OF THE PLAYER TO THE NEW POSITION
+		MOV X, CL
+		
+		JMP CONTINUE
+		
+		
+		MAKE_PEEP:
+			Peep
+		
+		CONTINUE:
+			
+
+	POPA
+ENDM MoveRight
+
+ClearPosition MACRO X, Y
+    PUSHA
+    
+        ;; MOVE CURSOR TO X,Y POSITION
+		MOV AH, 02
+		MOV BH, 00
+		MOV DL, X
+		MOV DH, Y
+		INT 10H
+		
+		;; CLEAR THAT PLACE 
+		MOV AH, 02
+		MOV DL, ' '
+		INT 21H
+		
+    
+    POPA
+ENDM ClearPosition
+
+Peep MACRO
+	PUSHA
+	
+		;; MAKE PEEP SOUND
+		MOV AH, 02H
+		MOV DL, 07H
+		INT 21H
+		
+	POPA
+
+ENDM Peep
+
+PrintPlayers MACRO
+    PUSHA
+	
+		;; MOVE CURSOR TO X1,Y2 POSITION
+		MOV AH, 02
+		MOV BH, 00
+		MOV DL, X1
+		MOV DH, Y1
+		INT 10H
+		
+		;; PRINT PLAYER 1
+		MOV AH, 09
+		MOV BH, 00
+		MOV AL, 'I'
+		MOV CX, 01
+		MOV BL, 0FH
+		INT 10H
+		
+		;; MOVE CURSOR TO X2,Y2 POSITION
+		MOV AH, 02
+		MOV BH, 00
+		MOV DL, X2
+		MOV DH, Y2
+		INT 10H
+		
+		;; PRINT PLAYER 2 
+		MOV AH, 09
+		MOV BH, 00
+		MOV AL, 'M'
+		MOV CX, 01
+		MOV BL, 0FH
+		INT 10H
+
+
+		
+    POPA
+    
+ENDM PrintPlayers
+
+RemoveCursor MACRO
+	PUSHA
+
+		MOV AH, 01H
+		MOV CX, 2607H
+		INT 10H
+		
+	POPA
+
+ENDM RemoveCursor
+
+
+FlushBuffer MACRO
+		PUSHA
+			
+			MOV AH, 00
+			INT 16H
+		
+		POPA
+ENDM FlushBuffer

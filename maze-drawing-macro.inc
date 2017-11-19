@@ -3,8 +3,11 @@ DrawMaze MACRO
     
         RandomizeMaze 
         LoadMaze
-
-		; CLEAR THE SCREEN
+		
+		;; SET CURSOR TO INVISIBLE
+		RemoveCursor
+		
+		;; CLEAR THE SCREEN
 		MOV AH, 06
 		MOV AL, 00
 		MOV BH, 07
@@ -14,7 +17,7 @@ DrawMaze MACRO
 		MOV DL, 79
 		INT 10H
     
-		; MOVE CURSOR TO START OF SCREEN
+		;; MOVE CURSOR TO START OF SCREEN
 		MOV AH, 02
 		MOV BH, 00
 		MOV DL, 00
@@ -25,7 +28,7 @@ DrawMaze MACRO
         MOV BX, OFFSET MAZE
                          
                          
-        ; PRINT AS LONG AS IT DIDN'T REACH '$' (SAME AS INT 21H , AH = 9)    
+        ;; PRINT AS LONG AS IT DIDN'T REACH '$' (SAME AS INT 21H , AH = 9)    
         PRINT:
             MOV AH, 2
             MOV DL, [BX]
@@ -42,15 +45,15 @@ ENDM DrawMaze
 RandomizeMaze MACRO 
     PUSHA
   
-        ; GET SYSTEM TIME
+        ;; GET SYSTEM TIME
         MOV AH, 2CH
         INT 21H
         
-        ; MOVE HUNDREDTHS OF SECOND TO AX
+        ;; MOVE HUNDREDTHS OF SECOND TO AX
         MOV AL, DL
         CBW
         
-        ; TAKE HUNDREDTHS OF SECOND MOD NUMBER OF MAZES TO GET A RANDOM NUMBER
+        ;; TAKE HUNDREDTHS OF SECOND MOD NUMBER OF MAZES TO GET A RANDOM NUMBER
         DIV MAZES_N
         MOV RANDOM, AH
 
@@ -63,9 +66,9 @@ ENDM RandomizeMaze
 LoadMaze MACRO 
     PUSHA
   
-        ; DECIDE WHICH FILE TO OPEN (WHICH MAZE DIFFICULTY)
-        CMP MODE, '1'    ; CHECK IF THE MODE IS EASY
-        JNZ H_MAZE  ; IF NOT GO TO HARD MAZE
+        ;; DECIDE WHICH FILE TO OPEN (WHICH MAZE DIFFICULTY)
+        CMP MODE, '1'    ;; CHECK IF THE MODE IS EASY
+        JNZ H_MAZE  ;; IF NOT GO TO HARD MAZE
         
         E_MAZE:
         
@@ -85,31 +88,31 @@ LoadMaze MACRO
         
         CONTINUE:
             
-            ; OPEN THE MAZE FILE
+            ;; OPEN THE MAZE FILE
             MOV AH, 3DH
             MOV AL, 00
             INT 21H
             
-            ; IF FILE COULDN'T BE FOUND, EXIT THE PROGRAM
+            ;; IF FILE COULDN'T BE FOUND, EXIT THE PROGRAM
             JC ERROR
             
-            ; PUSH AX (FILE HANDLE)
+            ;; PUSH AX (FILE HANDLE)
             PUSH AX               
             
-            ; CALCULATE THE AMOUNT OF BYTES TO BE SEEKED
-            ; FROM THE MAZE FILE TO REACH THE RANDOM MAZE        
+            ;; CALCULATE THE AMOUNT OF BYTES TO BE SEEKED
+            ;; FROM THE MAZE FILE TO REACH THE RANDOM MAZE        
             MOV CL, RANDOM     
             MOV CH, 0
             
-            ; CALCULATE OFFSET OF THE RANDOMLY SELECTED MAZE FROM THE BASE INDEX 
+            ;; CALCULATE OFFSET OF THE RANDOMLY SELECTED MAZE FROM THE BASE INDEX 
             MOV AX, ROWS
             MOV DX, COLS
             MUL DX                                               
             MUL CX
                   
             
-            ; SEEK THE MAZE FILE TO THE SPECIFIC MAZE
-            ; POP FILE HANDLE INTO BX      
+            ;; SEEK THE MAZE FILE TO THE SPECIFIC MAZE
+            ;; POP FILE HANDLE INTO BX      
             POP BX
             MOV CX, 0
             MOV DX, AX
@@ -117,12 +120,12 @@ LoadMaze MACRO
             MOV AL, 01H
             INT 21H
             
-            ; CALCULATE NUMBER OF BYTES IN THE MAZE 
+            ;; CALCULATE NUMBER OF BYTES IN THE MAZE 
             MOV AX, ROWS
             MOV DX, COLS
             MUL DX
             
-            ; READ THE MAZE FILE INTO MAZE VARIABLE
+            ;; READ THE MAZE FILE INTO MAZE VARIABLE
             MOV CX, AX
             MOV AH, 3FH
             MOV DX, OFFSET MAZE
