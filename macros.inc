@@ -26,16 +26,55 @@ DrawMaze MACRO
 		
 		
         MOV BX, OFFSET MAZE
+		PUSH BX
                          
                          
         ;; PRINT AS LONG AS IT DIDN'T REACH '$' (SAME AS INT 21H , AH = 9)    
         PRINT:
-            MOV AH, 2
-            MOV DL, [BX]
-            INT 21H
-            INC BX
-            CMP [BX], '$'
-            JNZ PRINT
+			CMP [BX], ' '
+			JZ INCREMENT
+			
+			CMP [BX], 13
+			JZ INCREMENT
+			
+			
+			CMP [BX], 10
+			JZ NEW_LINE
+			
+			
+			mov ah,9 ;Display
+			mov al,' ' ;SPACE
+			mov bh,0 ;Page 0
+			mov cx,1h ;1 time
+			mov bl,033H ;
+			int 10h
+			JMP INCREMENT
+			
+			NEW_LINE:
+				mov ah,3h
+				mov bh,0h
+				int 10h
+				MOV DL, 0
+				INC DH
+				mov ah,2
+				int 10h
+				JMP CHECK
+				
+			INCREMENT:
+				mov ah,3h
+				mov bh,0h
+				int 10h
+				INC DL
+				mov ah,2
+				int 10h
+				
+			CHECK:
+				POP BX
+				INC BX
+				PUSH BX
+				CMP [BX], '$'
+				JNZ PRINT
+    
     
     POPA
                 
@@ -1206,7 +1245,6 @@ Fire MACRO X, Y
    LEA BX,BOMBY
     ADD BX,B_COUNT
     MOV AL,Y
-	MOV DUMMY,AL
     MOV BOMBY,AL
 	
     INC B_COUNT
