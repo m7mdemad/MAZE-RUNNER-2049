@@ -1,9 +1,6 @@
-include maze-drawing-macro.inc
-include player-movement-macro.inc
-
-
-
-
+include macros.inc
+  
+  
         .MODEL HUGE
         .STACK 64
         .DATA
@@ -14,28 +11,64 @@ MODE        DB       '2'; '1'->EASY  ,  '2'->HARD
 ROWS        DW       81 ; NUMBER OF CHARS IN THE ROW
 COLS        DW       21 ; NUMBER OF CHARS IN THE COL
 INDEX       DW       ?  ; INDEX RETURNED BY GETINDEX MACRO          
-EASY_MAZE   DB  "MAZE_E.txt",0
-HARD_MAZE   DB  "MAZE_H.txt",0
-MAZE        DB  2100 DUP('$')
+EASY_MAZE   DB       "MAZE_E.txt",0
+HARD_MAZE   DB       "MAZE_H.txt",0
+MAZE        DB       2100 DUP('$')
 
-X1          DB       0
+X1          DB       0 ; PLAYER 1 POSITION
 Y1          DB       1
 
-X2          DB       0
+X2          DB       0 ; PLAYER 2 POSITION
 Y2          DB       1
 
+BOMBX       DB       50 DUP(-1) ; ARRAY OF BOMBS X COORDINATES
+BOMBY       DB       50 DUP(-1) ; ARRAY OF BOMBS Y COORDINATES
+
+B_COUNT     DW       0 
+         
+BOMB_T_S    DB       100 DUP(63) ; SECOND - TIME THE BOMB PLANTED IN (3 IS EQUAL TO POSTPONE)
+BOMB_T_M    DB       100 DUP(0)  ; MINUTE
+
+P1_POSTPONE DB       0 ; FREEZE PLAYER ONE FOR P1_POSPONE MOVES
+P2_POSTPONE DB       0 ; FREEZE PLAYER TWO FOR P2_POSPONE MOVES
 
 
 ;====== KEYS SCANCODE ============
-UP_ARROW		EQU		48H
-DOWN_ARROW		EQU		50H
-RIGHT_ARROW		EQU		4DH
-LEFT_ARROW		EQU		4BH
+UP_ARROW		DB   	48H
+DOWN_ARROW		DB		50H
+RIGHT_ARROW		DB		4DH
+LEFT_ARROW		DB		4BH
 
-W_LETTER		EQU		11H
-A_LETTER		EQU		1EH
-S_LETTER		EQU		1FH
-D_LETTER		EQU		20H      
+
+UP_ARROW_PER		EQU   	48H
+DOWN_ARROW_PER		EQU		50H
+RIGHT_ARROW_PER		EQU		4DH
+LEFT_ARROW_PER		EQU		4BH
+
+
+
+W_LETTER		DB		11H
+A_LETTER		DB		1EH
+S_LETTER		DB		1FH
+D_LETTER		DB		20H  
+
+
+W_LETTER_PER		EQU		11H
+A_LETTER_PER		EQU		1EH
+S_LETTER_PER		EQU		1FH
+D_LETTER_PER		EQU		20H  
+
+
+
+F_LETTER		EQU		21H
+M_LETTER		EQU		32H
+    
+      
+RAND_1      DB 4 DUP (0)
+RAND_2      DB 4 DUP (0)
+
+R_COUNT     DB 0  
+
 
 ; MAXIMUM NUMBER OF MAZES IN EACH MODE IS: 38
 
@@ -53,8 +86,12 @@ MAIN    PROC FAR
         
 
         MAINLOOP:
+            
 			PrintPlayers
-			HandlePlayerMovement
+			PrintBombs
+			;HandlePlayerMovement
+			DetectAction
+			
 			
 			JMP MAINLOOP
 			
