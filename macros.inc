@@ -78,7 +78,7 @@ DrawMaze MACRO
     
     POPA
                 
-ENDM DrawMaze   
+ENDM DrawMaze      
 
 
 RandomizeMaze MACRO 
@@ -442,6 +442,15 @@ ClearPosition MACRO X, Y
 		MOV DH, Y
 		INT 10H
 		
+		
+		MOV AH,9
+		MOV BH,0
+		MOV AL,44H
+		MOV CX,1H
+		MOV BL,000H
+		INT 10H
+		  
+		
 		;; CLEAR THAT PLACE 
 		MOV AH, 02
 		MOV DL, ' '
@@ -611,76 +620,354 @@ ENDM DetectAction
 
 
 
-TestBombs MACRO X,Y,S
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;------------------------------------------------- 
+;;PRINT BOMBS EVERY LOOP IN THE INDEX STORED IN BOMBX AND BOMBY  
+PrintBombs MACRO
+  PUSHA
+	  
+	  LOCAL NEXT
+	  
+	  LEA SI,BOMBX
+	  LEA DI,BOMBY
+		
+	  MOV CX,B_COUNT
+	  
+	  ;; IF BOMB INDEX IN BOMBX = -1 SKIP IT ELSE PRINT IT
+	  LOOP_BOMBS:
+		    MOV AH,-1
+		    CMP [SI],AH
+			JZ NEXT
+			
+		     MoveCursor [SI],[DI]
+		     PlantBomb
+             JMP NEXT			
+			
+			  
+		    NEXT:
+			  INC SI
+		      INC DI
+			  LOOP LOOP_BOMBS
+			
+  POPA
+ENDM PrintBombs
+
+
+;;-------------------------------------------------
+;; GET AND IMPLEMENT THE PLAYERS FIRE ACTION
+HandlePlayerFire MACRO
+    PUSHA
+		LOCAL CONTINUE
+
+        ;; GET KEY PRESSED 
+		MOV AH, 01
+		INT 16H
+		JZ CONTINUE
+		
+		MOV AL,FIRE_DELAY
+		
+		CMP AH, M_LETTER
+		JZ FIRE1
+		
+		CMP AH, F_LETTER
+		JZ FIRE2
+		
+		JMP CONTINUE
+		
+		FIRE1:
+		    CMP HOLD_FIRE_1,0
+			JNZ DEC_HOLD_1 ;; PLAYER 1 CAN'T FIRE AGAIN YET 
+			FIRE X1, Y1 , 1
+			MOV HOLD_FIRE_1,AL ;; HOLD FIRE THE NEXT "FIRE_DELAY" TIMES
+			JMP CONTINUE
+			
+		FIRE2:
+		    CMP HOLD_FIRE_2,0
+			JNZ DEC_HOLD_2 ;; PLAYER 2 CAN'T FIRE AGAIN YET
+			FIRE X2, Y2 , 2
+			MOV HOLD_FIRE_2,AL
+			JMP CONTINUE
+
+		;; IGNORE ACTION AND DEC HOLD_FIRE_1 OR HOLD_FIRE_2	
+        DEC_HOLD_1:
+			DEC HOLD_FIRE_1
+            JMP CONTINUE			
+		
+		
+		DEC_HOLD_2:
+			DEC HOLD_FIRE_2
+            JMP CONTINUE
+    
+    
+		CONTINUE:
+	
+  POPA
+        
+ENDM HandlePlayerFire
+
+;;-------------------------------
+;; PRINT THE BOMB ON THE SCREEN AND STORE ITS DATA IN BOMBX, BOMBY, BOMB_ACTIVE
+Fire MACRO X, Y, P
+    PUSHA
+
+    MOV DL,X
+    MOV DH,Y
+    MOV AL,P
+  
+    MoveCursor DL,DH
+    PlantBomb ;; PRINT THE BOMB
+    AddBomb DL,DH,AL ;; STORE ITS DATA
+            
+  POPA
+        
+ENDM Fire
+
+;;-------------------------------
+MoveCursor MACRO X,Y
+    PUSHA
+	
+  MOV DL,X
+  MOV DH,Y
+  MOV AH,02H
+  MOV BH,0
+  INT 10H 
+  
+  POPA      
+ENDM MoveCursor
+
+;;-------------------------------
+PlantBomb MACRO
+    PUSHA
+	
+  MOV AH,9
+  MOV BH,0
+  MOV AL,'O'
+  MOV CX,1H
+  MOV BL,04fH
+  INT 10H
+    
+	POPA
+        
+ENDM PlantBomb
+
+;;-------------------------------
+
+ AddBomb MACRO X,Y,P
+    PUSHA
+   
+    StoreX X
+    StoreY Y
+	StoreCond P 
+   
+    POPA
+ ENDM AddBomb
+
+;;-------------------------------
+
+StoreX MACRO X
+   PUSHA
+   
+   LEA BX,BOMBX
+   ADD BX,B_COUNT
+   MOV AL,X
+   MOV [BX],AL
+   
+   POPA
+   
+ENDM StoreX
+
+;;-------------------------------
+
+StoreY MACRO Y
+   PUSHA
+   
+   LEA BX,BOMBY
+   ADD BX,B_COUNT
+   MOV AL,Y
+   MOV [BX],AL
+   
+   POPA
+   
+ENDM StoreY
+
+;;-------------------------------
+
+StoreCond MACRO P
+   PUSHA
+	
+	LEA BX, BOMB_ACTIVE
+	ADD BX, B_COUNT
+	MOV AL,P
+	MOV [BX], AL
+	
+    INC B_COUNT
+
+   POPA
+ENDM StoreCond
+
+
+
+;;------------------Explosion---------------------------
+
+
+;; CHECK IF ANY BOMB GOING TO EXPLODE
+TestBombs MACRO S,X,Y
    PUSHA
    LOCAL NEXT
+   LOCAL COMPARE_X
+   LOCAL COMPARE_Y
+   LOCAL EX_1
+   LOCAL CHECK
+   
       LEA SI,BOMBX
 	  LEA DI,BOMBY
+	  LEA BX, BOMB_ACTIVE	  
 	  
 	  MOV CX,B_COUNT
 	  
+	CHECK:  
+	  CMP [BX], 0
+	  JNZ NEXT
+	  
+
       COMPARE_X:
-	       
-		   CMP [SI],X
+			
+		   MOV AH,X
+		   CMP [SI],AH
 		   JZ COMPARE_Y
 		   JNZ NEXT
 	       
 	  COMPARE_Y:
            
-		   CMP [DI],Y
+		   MOV AL,Y
+		   CMP [DI],AL
            JNZ NEXT
-           Explode CX,S
+		    
+		   MOV AL,1	
+		   CMP AL,S
+		   JZ EX_1
+		   
+		   Explode CX,2
+		   JMP NEXT
+		   
+		   
+        EX_1:   Explode CX,1
+		        JMP NEXT
 		   
        NEXT:
             
            INC SI
            INC DI
-           LOOP COMPARE_X		   
+		   INC BX 
+           LOOP CHECK		   
    
    POPA  
 ENDM TestBombs
 
- 
+;;-------------------------------
+;; CHECK FOR ACTIVE BOMBS (READY FOR EXPLOSION)
+CheckBombs MACRO
+	PUSHA
+		
+		LOCAL CHECK
+		LOCAL NEXT
+		LOCAL POS1
+		LOCAL POS2
+		
+		LEA SI, BOMBX
+		LEA DI, BOMBY
+		LEA BX, BOMB_ACTIVE
+		
+		
+		MOV CX, B_COUNT
+		
+		CHECK:
+		
+			CMP [BX], 1
+			JZ POS1
+			
+			CMP [BX], 2
+			JZ POS2
+			
+			JMP NEXT
+			
+		POS1:
+			MOV AH, [SI]
+			SUB AH, X1
+			
+			MOV AL, [DI]
+			SUB AL, Y1
+			OR AL, AH
+			CMP AL, 0
+			JZ NEXT
+			
+			MOV [BX], 0
+			
+			JMP NEXT
+			
+			
+		
+		
+		
+		POS2:
 
-Explode MACRO COUNT,S
+			MOV AH, [SI]
+			SUB AH, X2
+			
+			MOV AL, [DI]
+			SUB AL, Y2
+			OR AL, AH
+			JZ NEXT
+			
+			MOV [BX], 0		
+			
+			JMP NEXT
+		
+		
+		
+		
+		NEXT:
+			INC SI
+			INC DI
+			INC BX
+			DEC CX
+			JNZ CHECK
+			
+			
+
+	POPA
+ENDM CheckBombs
+ 
+ 
+;;-------------------------------
+;; IMPLEMENT EXPLOSION ACTION 
+Explode MACRO COUNT,G
    PUSHA
 
-        ResetXY COUNT
-		ClearLoc COUNT
-        Bang S
+        MOV AH,G
+        MOV DX,B_COUNT
+        SUB DX,COUNT
+       
+        ResetXY DX
+		
+		LEA SI,BOMBX
+		ADD SI,COUNT 
+
+		LEA DI,BOMBY
+        ADD DI,COUNT 
+		
+        Bang AH
       			
 
    POPA
 ENDM Explode
 
-
-ClearLoc MACRO N
-  PUSHA
-
-		LEA SI,BOMBX
-		ADD SI,N
-		MOV DL,[SI]
-
-		LEA DI,BOMBY
-		ADD DI,N 
-		MOV DH,[DI]
-
-		MOV AH,3H
-		MOV BH,0H
-		INT 10H
-
-		MOV AH,9
-		MOV BH,0
-		MOV AL,44H
-		MOV CX,5H
-		MOV BL,000H
-		INT 10H
-
-
-  POPA
-ENDM ClearLoc
-
-;;------------------------------------
+   
+;;-------------------------------
+;; 
 ResetXY MACRO N
   PUSHA
 
@@ -690,61 +977,68 @@ ResetXY MACRO N
 		LEA DI,BOMBY
 		ADD DI,N
 
-		MOV [SI],-1 ;; NOT SURE
-		MOV [DI],-1 ;; NOT SURE
+		MOV [SI],-1 
+		MOV [DI],-1 
 
 
   POPA	
 ENDM ResetXY
-;;---------------------------------------
 
-Bang MACRO 
+
+
+Bang MACRO S
   PUSHA
-
-	    CMP S,1
+    LOCAL P_2
+	LOCAL END_IT
+		
+		MOV AL, MOTION_DELAY
+	    
+		CMP S,1
         JNZ P_2
-		MOV P1_POSTPONE,10
+		
+		;; SHUFFLE THE CONTROLS OF PLAYER1
+		MOV P1_POSTPONE, AL
 		Shuffle1
 		
-        P_2:
-            MOV P2_POSTPONE,10
-            Shuffle2			
+		JMP END_IT
+        
+		;; SHUFFLE THE CONTROLS OF PLAYER2
+		P_2:
+            MOV P2_POSTPONE,AL
+            Shuffle2			 
 
+			JMP END_IT
+			
+        END_IT:
+       
   POPA	
 ENDM Bang
 
-;;------------------------------------------UP->1,DOWN->2,LEFT->3,RIGHT->4
+
 Shuffle1 MACRO 
   PUSHA
         
 		LEA SI,RAND_1
-	    
-        Randomize [SI]
+
+		;; randomize numbers with uniqueness
+		RandUnique
+		
 		Select_UP_1 [SI]
-		INC R_COUNT
 		INC SI
-		
-		Randomize [SI]
-		Unique [SI]
+
 		Select_DOWN_1 [SI]
-		INC R_COUNT
 		INC SI
-		
-		Randomize [SI]
-		Unique [SI]
+
 		Select_LEFT_1 [SI]
-		INC R_COUNT
 		INC SI
-		
-		Randomize [SI]
-		Unique [SI]
-		Select_RIGHT_1 [SI]
-		
-		SUB R_COUNT,3
+		  
+		Select_RIGHT_1 [SI]		
 		
 	    
   POPA	
 ENDM Shuffle1
+
+
 ;;--------------------------------------------
 
 Select_UP_1 MACRO S
@@ -767,20 +1061,21 @@ Select_UP_1 MACRO S
         JZ RIGHT_1
 		
         DOWN_1:
-		    MOV AL,DOWN_ARROW
+		    MOV AL,DOWN_ARROW_PER
             MOV UP_ARROW,AL
             JMP END_IT
         
         LEFT_1:
-		    MOV AL,LEFT_ARROW
+		    MOV AL,LEFT_ARROW_PER
             MOV UP_ARROW,AL
             JMP END_IT
 			
 		RIGHT_1:
-		    MOV AL,RIGHT_ARROW
+		    MOV AL,RIGHT_ARROW_PER
             MOV UP_ARROW,AL
             JMP END_IT
-        		
+        
+		END_IT:		
                       
    POPA
 ENDM Select_UP_1
@@ -806,20 +1101,21 @@ Select_DOWN_1 MACRO S
         JZ RIGHT_1
 		
         UP_1:
-		    MOV AL,UP_ARROW
+		    MOV AL,UP_ARROW_PER
             MOV DOWN_ARROW,AL
             JMP END_IT
         
         LEFT_1:
-		    MOV AL,LEFT_ARROW
+		    MOV AL,LEFT_ARROW_PER
             MOV DOWN_ARROW,AL
             JMP END_IT
 			
 		RIGHT_1:
-		    MOV AL,RIGHT_ARROW
+		    MOV AL,RIGHT_ARROW_PER
             MOV DOWN_ARROW,AL
             JMP END_IT
-        		
+        
+        END_IT:		
                       
    POPA
 ENDM Select_DOWN_1
@@ -845,21 +1141,22 @@ Select_LEFT_1 MACRO S
         JZ RIGHT_1
 		
         UP_1:
-		    MOV AL,UP_ARROW
+		    MOV AL,UP_ARROW_PER
             MOV LEFT_ARROW,AL
             JMP END_IT
         
         DOWN_1:
-		    MOV AL,DOWN_ARROW
+		    MOV AL,DOWN_ARROW_PER
             MOV LEFT_ARROW,AL
             JMP END_IT
 			
 		RIGHT_1:
-		    MOV AL,RIGHT_ARROW
+		    MOV AL,RIGHT_ARROW_PER
             MOV LEFT_ARROW,AL
             JMP END_IT
         		
-                      
+        END_IT:        
+		
    POPA
 ENDM Select_LEFT_1
 ;;--------------------------------------------
@@ -884,58 +1181,50 @@ Select_RIGHT_1 MACRO S
         JZ END_IT
 		
         UP_1:
-		    MOV AL,UP_ARROW
+		    MOV AL,UP_ARROW_PER
             MOV RIGHT_ARROW,AL
             JMP END_IT
         
         DOWN_1:
-		    MOV AL,DOWN_ARROW
+		    MOV AL,DOWN_ARROW_PER
             MOV RIGHT_ARROW,AL
             JMP END_IT
 			
 		LEFT_1:
-		    MOV AL,LEFT_ARROW
+		    MOV AL,LEFT_ARROW_PER
             MOV RIGHT_ARROW,AL
             JMP END_IT
-        		
+        
+        END_IT:		
                       
    POPA
 ENDM Select_RIGHT_1
 
 
 ;;--------------------------------------------W->1,2->S,3->A,4->D
+
 Shuffle2 MACRO 
   PUSHA
         
-		LEA SI,RAND_2
-	    
-        Randomize [SI]
+		LEA SI,RAND_1
+
+		;; randomize numbers with uniqueness
+		RandUnique
+		
 		Select_UP_2 [SI]
-		INC R_COUNT
 		INC SI
-		
-		Randomize [SI]
-		Unique [SI]
+
 		Select_DOWN_2 [SI]
-		INC R_COUNT
 		INC SI
-		
-		Randomize [SI]
-		Unique [SI]
+
 		Select_LEFT_2 [SI]
-		INC R_COUNT
 		INC SI
-		
-		Randomize [SI]
-		Unique [SI]
-		Select_RIGHT_2 [SI]
-		
-		SUB R_COUNT,3
+		  
+		Select_RIGHT_2 [SI]		
 		
 	    
   POPA	
-ENDM Shuffle1
-;;--------------------------------------------
+ENDM Shuffle2
 
 Select_UP_2 MACRO S
    PUSHA
@@ -957,21 +1246,24 @@ Select_UP_2 MACRO S
         JZ RIGHT_2
 		
         DOWN_2:
-		    MOV AL,S_LETTER
+		    MOV AL,S_LETTER_PER
             MOV W_LETTER,AL
             JMP END_IT
         
         LEFT_2:
-		    MOV AL,A_LETTER
+		    MOV AL,A_LETTER_PER
             MOV W_LETTER,AL
             JMP END_IT
 			
 		RIGHT_2:
-		    MOV AL,D_LETTER
+		    MOV AL,D_LETTER_PER
             MOV W_LETTER,AL
             JMP END_IT
         		
-                      
+        
+        END_IT:
+
+		
    POPA
 ENDM Select_UP_2
 ;;--------------------------------------------
@@ -996,20 +1288,21 @@ Select_DOWN_2 MACRO S
         JZ RIGHT_2
 		
         UP_2:
-		    MOV AL,W_LETTER
+		    MOV AL,W_LETTER_PER
             MOV S_LETTER,AL
             JMP END_IT
         
         LEFT_2:
-		    MOV AL,A_LETTER
+		    MOV AL,A_LETTER_PER
             MOV S_LETTER,AL
             JMP END_IT
 			
 		RIGHT_2:
-		    MOV AL,D_LETTER
+		    MOV AL,D_LETTER_PER
             MOV S_LETTER,AL
             JMP END_IT
-        		
+        
+        END_IT:		
                       
    POPA
 ENDM Select_DOWN_2
@@ -1023,7 +1316,7 @@ Select_LEFT_2 MACRO S
 	LOCAL RIGHT_2
 	
         CMP S,1
-        JZ UP_1
+        JZ UP_2
 		
 		CMP S,2
 		JZ DOWN_2
@@ -1035,20 +1328,22 @@ Select_LEFT_2 MACRO S
         JZ RIGHT_2
 		
         UP_2:
-		    MOV AL,W_LETTER
+		    MOV AL,W_LETTER_PER
             MOV A_LETTER,AL
             JMP END_IT
         
         DOWN_2:
-		    MOV AL,S_LETTER
+		    MOV AL,S_LETTER_PER
             MOV A_LETTER,AL
             JMP END_IT
 			
 		RIGHT_2:
-		    MOV AL,D_LETTER
+		    MOV AL,D_LETTER_PER
             MOV A_LETTER,AL
             JMP END_IT
         		
+				
+		END_IT:		
                       
    POPA
 ENDM Select_LEFT_2
@@ -1074,304 +1369,105 @@ Select_RIGHT_2 MACRO S
         JZ END_IT
 		
         UP_2:
-		    MOV AL,W_LETTER
+		    MOV AL,W_LETTER_PER
             MOV D_LETTER,AL
             JMP END_IT
         
-        DOWN_1:
-		    MOV AL,S_LETTER
+        DOWN_2:
+		    MOV AL,S_LETTER_PER
             MOV D_LETTER,AL
             JMP END_IT
 			
-		LEFT_1:
-		    MOV AL,A_LETTER
+		LEFT_2:
+		    MOV AL,A_LETTER_PER
             MOV D_LETTER,AL
             JMP END_IT
         		
+				
+		END_IT:		
                       
    POPA
 ENDM Select_RIGHT_2
 
 
 ;;--------------------------------------------
-Unique MACRO  R
-  PUSHA
-    
-	  LEA BX,RAND_1
-	  MOV CX,4
-	  
-LOOP1:
-      CMP CX,B_COUNT
-      JZ Ignore
-	  
-      CMP [BX],[BX+CX]
-	  JZ AGAIN
-	  
-      LOOP LOOP1
-	  
-	  
-AGAIN:  Randomize R	 
-        JMP LOOP1
-		
-Ignore: LOOP LOOP1	  
-		
-  POPA	
-ENDM Unique
+Randomize MACRO R,N
+	PUSHA
 
-;;--------------------------------------------
-Randomize MACRO R
-    PUSHA
-  
-        ;; GET SYSTEM TIME
-        MOV AH, 2CH
-        INT 21H
-        
-        ;; MOVE HUNDREDTHS OF SECOND TO AX
-        MOV AL, DL
-        CBW
-        
-        ;; TAKE HUNDREDTHS OF SECOND MOD NUMBER OF MAZES TO GET A RANDOM NUMBER
-        MOV BL,4
+		;; GET SYSTEM TIME
+		MOV AH, 2CH
+		INT 21H
+
+		;; MOVE HUNDREDTHS OF SECOND TO AX
+		MOV AL, DL
+		CBW
+
+		;; TAKE HUNDREDTHS OF SECOND MOD NUMBER OF MAZES TO GET A RANDOM NUMBER
+		MOV BL,N
 		DIV BL
-        MOV R, AH
-		ADD R,1
+		MOV R, AH
 
-        
-    POPA        
+
+	POPA
 ENDM Randomize
 
 ;;---------------------------------------------------------------
 
-
-
-
-
-     
-PrintBombs MACRO
-  PUSHA
-	  LOCAL NEXT
-	  LEA SI,BOMBX
-	  LEA DI,BOMBY
-		
-	  MOV CX,50
-		
-	  LOOP_BOMBS:
-		    MOV AH,-1
-		    CMP [SI],AH
-			  JZ NEXT
-			
-		     ;;MOVE CURSOR
-		     MoveCursor [SI],[DI]
-		     ;;PRINT
-		     PlantBomb
-             JMP NEXT			
-			
-		     NEXT:
-			  INC SI
-		      INC DI
-			  LOOP LOOP_BOMBS
-			
-  POPA
-ENDM PrintBombs
-
-
-HandlePlayerFire MACRO
-    PUSHA
-		LOCAL CONTINUE
-
-		;; CHECK IF A KEY WAS PRESSED
-		MOV AH, 01
-		INT 16H
-		JZ CONTINUE
-		
-		
-		
-		CMP AH, M_LETTER
-		JZ FIRE1
-		
-		CMP AH, F_LETTER
-		JZ FIRE2
-		
-		JMP CONTINUE
-		
-		FIRE1:
-			FIRE X1, Y1
-;			FlushBuffer
-			JMP CONTINUE
-			
-		FIRE2:
-			FIRE X2, Y2
-;			FlushBuffer
-			JMP CONTINUE
-
-
-    
-    
-		CONTINUE:
-		
-  POPA
+RandUnique MACRO
+    PUSHA  
         
-ENDM HandlePlayerFire
-
-;;-------------------------------
-
-Fire MACRO X, Y
-    PUSHA
-
-  MOV DL,X
-  MOV DH,Y
-  MOV AH,02H
-  MOV BH,0
-  INT 10H 
-  
-  ;;MoveCursor X,Y
- ; PlantBomb
-  ;;AddBomb X,Y
-
-    LEA BX,BOMBX
-    ADD BX,B_COUNT
-    MOV AL,X
-    MOV [BX],AL
-   
-    FlushBuffer  
-    MOV BX,00
-	
-    LEA BX,BOMBY
-    ADD BX,B_COUNT
-    MOV AH,Y
-    MOV [BX],AH
-	
-
-   LEA BX,BOMBY
-    ADD BX,B_COUNT
-    MOV AL,Y
-    MOV BOMBY,AL
-	
-    INC B_COUNT
-   
-   
-  
-  
-  POPA
+		LOCAL GENERATE
+		LOCAL CHECK
+		LOCAL SHIFT
+		LOCAL NEXT
+		LOCAL RESET
+		
+        MOV SI, OFFSET RAND_2
+        MOV DI, OFFSET RAND_1
+        MOV CL, RAND_2_LNS
+        MOV CH, 0
+        MOV BH, 0
         
-ENDM Fire
-
-;;-------------------------------
-MoveCursor MACRO X,Y
-    PUSHA
-	
-  MOV DL,X
-  MOV DH,Y
-  MOV AH,02H
-  MOV BH,0
-  INT 10H 
-  
-  POPA
-        
-ENDM MoveCursor
-
-;;-------------------------------
-PlantBomb MACRO
-    PUSHA
-	
-  MOV AH,9
-  MOV BH,0
-  MOV AL,'O'
-  MOV CX,1H
-  MOV BL,04fH
-  INT 10H
+        GENERATE:
+            RANDOMIZE RANDOM , RAND_2_LNS
+            MOV BL, RANDOM
+            MOV AL, SI[BX]
+            MOV [DI], AL
+            INC DI
+            
+        CHECK:
+            INC BL
+            CMP BL, RAND_2_LNS
+            JZ NEXT
+            ;; SHIFT THE ELEMENTS
+        SHIFT:
+            MOV AL, SI[BX]
+            DEC BL
+            MOV SI[BX], AL
+            INC BL
+            JMP CHECK
+                 
+        NEXT:     
+            DEC RAND_2_LNS
+            LOOP GENERATE 
+		
+		; reset the reference array to its initial values with its length
+		MOV SI, OFFSET RAND_2
+		MOV CX, 1
+		
+		RESET:
+			MOV [SI], CX
+			INC SI
+			INC CX
+			CMP CX, 5
+			JNZ RESET
+			
+			
+		MOV RAND_2_LNS, 4
+		
     
-	POPA
-        
-ENDM PlantBomb
-
-;;-------------------------------
-AddBomb MACRO X,Y
-   PUSHA
-   
     
-    StoreSec
-    StoreMin
-   
-   
-    
-    LEA BX,BY
-    ADD BX,B_COUNT
-    MOV AL,Y
-    MOV [BX],AL
-	
-   
-   
-    LEA BX,BOMBX
-    ADD BX,B_COUNT
-    MOV AL,X
-    MOV [BX],AL
-   
-    LEA BX,BOMBY
-    ADD BX,B_COUNT
-    MOV AL,Y
-    MOV [BX],AL
-	
-	
-	INC B_COUNT
-   
-   
-    ;;StoreX X
-    ;;StoreY Y
-   
-   
-   POPA
-   
-ENDM AddBomb
+    POPA
+ENDM	RandUnique
 
-;;-------------------------------
-StoreSec MACRO
-   PUSHA
-   
-   LEA BX,BOMB_T_S
-   ADD BX,B_COUNT
-   MOV AH, 2CH                  
-   INT 21H    
-   MOV [BX],DH
-   
-   POPA
-   
-ENDM StoreSec
-;;-------------------------------
-StoreMin MACRO
-   PUSHA
-   
-   LEA BX,BOMB_T_M
-   ADD BX,B_COUNT
-   MOV AH, 2CH                  
-   INT 21H    
-   MOV [BX],CL
-   
-   POPA
-   
-ENDM StoreMin
-;;-------------------------------
-StoreX MACRO X
-   PUSHA
-   
-   LEA BX,BOMBX
-   ADD BX,B_COUNT
-   MOV AL,X
-   MOV [BX],AL
-   
-   POPA
-   
-ENDM StoreX
-;;-------------------------------
-StoreY MACRO Y
-   PUSHA
-   
-   LEA BX,BOMBY
-   ADD BX,B_COUNT
-   MOV AL,Y
-   ;;MOV BOMBY,AL
-   INC B_COUNT
-   
-   POPA
-   
-ENDM StoreY
+
