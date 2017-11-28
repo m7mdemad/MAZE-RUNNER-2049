@@ -280,11 +280,11 @@ DrawIntro MACRO
 			JZ NEW_LINE
 			
 			
-			mov ah,9 ;Display
-			mov al,' ' ;SPACE
-			mov bh,0 ;Page 0
-			mov cx,1h ;1 time
-			mov bl,022H ;
+			mov ah,9 ;;Display
+			mov al,' ' ;;SPACE
+			mov bh,0 ;;Page 0
+			mov cx,1h ;;1 time
+			mov bl,022H ;;
 			int 10h
 			JMP INCREMENT
 			
@@ -624,6 +624,58 @@ ENDM ClearPosition
 Peep MACRO
 	PUSHA
 	
+		MOV CX, 1000
+		IN AL, 061H
+		OR AL, 003H
+		DEC AX
+		OUT 061H, AL	;;TURN AND GATE ON;; TURN TIMER OFF
+		MOV DX, 00012H	;;HIGH WORD OF 1193180
+		MOV AX, 034DCH	;;LOW WORD OF 1193180
+		DIV CX
+		MOV DX, AX
+		MOV AL, 0B6H
+		PUSHF
+		CLI	;;!!!
+		OUT 043H, AL
+		MOV AL, DL
+		OUT 042H, AL
+		MOV AL, DH
+		OUT 042H, AL
+		POPF
+		IN AL, 061H
+		OR AL, 003H
+		OUT 061H, AL
+		
+		SLEEP 1
+		
+		MOV CX, 25000
+		IN AL, 061H
+		OR AL, 003H
+		DEC AX
+		OUT 061H, AL	;;TURN AND GATE ON;; TURN TIMER OFF
+		MOV DX, 00012H	;;HIGH WORD OF 1193180
+		MOV AX, 034DCH	;;LOW WORD OF 1193180
+		DIV CX
+		MOV DX, AX
+		MOV AL, 0B6H
+		PUSHF
+		CLI	;;!!!
+		OUT 043H, AL
+		MOV AL, DL
+		OUT 042H, AL
+		MOV AL, DH
+		OUT 042H, AL
+		POPF
+		IN AL, 061H
+		OR AL, 003H
+		OUT 061H, AL
+		
+		
+		;;DESTROYS AL
+				IN AL, 061H
+				AND AL, 0FCH
+				OUT 061H, AL
+	
 		;; MAKE PEEP SOUND
 		MOV AH, 02H
 		MOV DL, 07H
@@ -646,7 +698,7 @@ PrintPlayers MACRO
 		;; PRINT PLAYER 1
 		MOV AH, 09
 		MOV BH, 00
-		MOV AL, 'I'
+		MOV AL, P1_CHAR
 		MOV CX, 01
 		MOV BL, 0FH
 		INT 10H
@@ -661,7 +713,7 @@ PrintPlayers MACRO
 		;; PRINT PLAYER 2 
 		MOV AH, 09
 		MOV BH, 00
-		MOV AL, 'M'
+		MOV AL, P2_CHAR
 		MOV CX, 01
 		MOV BL, 0FH
 		INT 10H
@@ -905,7 +957,7 @@ PlantBomb MACRO
 	
   MOV AH,9
   MOV BH,0
-  MOV AL,'O'
+  MOV AL, BOMB_CHAR
   MOV CX,1H
   MOV BL,04fH
   INT 10H
@@ -1158,14 +1210,14 @@ Bang MACRO S
         JNZ P_2
 		
 		;; SHUFFLE THE CONTROLS OF PLAYER1
-		MOV P1_POSTPONE, AL
+		ADD P1_POSTPONE, AL
 		Shuffle1
 		
 		JMP END_IT
         
 		;; SHUFFLE THE CONTROLS OF PLAYER2
 		P_2:
-            MOV P2_POSTPONE,AL
+            ADD P2_POSTPONE,AL
             Shuffle2			 
 
 			JMP END_IT

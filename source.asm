@@ -7,7 +7,7 @@ include 'macros.inc'
           
 RANDOM              DB       0  ; THE RANDOM NUBMBER RETURNED BY RANDOMIZE MACRO
 MAZES_N             DB       38 ; NUMBER OF MAZES AVAILABLE FOR EACH MODE
-MODE                DB       '2'; '1'->EASY  ,  '2'->HARD
+MODE                DB       '1'; '1'->EASY  ,  '2'->HARD
 ROWS                DW       81 ; NUMBER OF CHARS IN THE ROW
 COLS                DW       21 ; NUMBER OF CHARS IN THE COL
 INDEX               DW       ?  ; INDEX RETURNED BY GETINDEX MACRO          
@@ -22,7 +22,11 @@ X1                  DB       0 ; PLAYER 1 POSITION
 Y1                  DB       1
 
 X2                  DB       0 ; PLAYER 2 POSITION
-Y2                  DB       1
+Y2                  DB       1 
+
+P1_CHAR             DB       1
+P2_CHAR             DB       2
+BOMB_CHAR           DB       15
 
 BOMBX               DB       50 DUP(-1) ; ARRAY OF BOMBS X COORDINATES
 BOMBY               DB       50 DUP(-1) ; ARRAY OF BOMBS Y COORDINATES
@@ -38,8 +42,8 @@ BOMB_T_M            DB       100 DUP(0)  ; MINUTE
 P1_POSTPONE         DB       0 ; FREEZE PLAYER ONE FOR P1_POSPONE MOVES
 P2_POSTPONE         DB       0 ; FREEZE PLAYER TWO FOR P2_POSPONE MOVES
         
-MOTION_DELAY        DB       50
-FIRE_DELAY          DB       50
+MOTION_DELAY        DB       20
+FIRE_DELAY          DB       15
         
 RAND_1              DB      4 DUP (0)
 RAND_2              DB      1,2,3,4
@@ -102,6 +106,7 @@ MAIN    PROC FAR
         MOV AX,@DATA
         MOV DS,AX
         
+        DrawIntro
         DrawMaze
         
 
