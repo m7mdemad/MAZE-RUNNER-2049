@@ -1,6 +1,11 @@
 DrawMaze MACRO
     PUSHA    
-    
+	
+		LOCAL PRINT
+		LOCAL NEW_LINE
+		LOCAL INCREMENT
+		LOCAL CHECK
+		
         RandomizeMaze 
         LoadMaze
 		
@@ -42,11 +47,11 @@ DrawMaze MACRO
 			JZ NEW_LINE
 			
 			
-			mov ah,9 ;Display
-			mov al,' ' ;SPACE
-			mov bh,0 ;Page 0
-			mov cx,1h ;1 time
-			mov bl,033H ;
+			mov ah,9 ;;Display
+			mov al,' ' ;;SPACE
+			mov bh,0 ;;Page 0
+			mov cx,1h ;;1 time
+			mov bl,033H ;;
 			int 10h
 			JMP INCREMENT
 			
@@ -104,6 +109,9 @@ ENDM RandomizeMaze
 
 LoadMaze MACRO 
     PUSHA
+	
+		LOCAL ERROR
+		LOCAL CONTINUE
   
         ;; DECIDE WHICH FILE TO OPEN (WHICH MAZE DIFFICULTY)
         CMP MODE, '1'    ;; CHECK IF THE MODE IS EASY
@@ -173,6 +181,159 @@ LoadMaze MACRO
     POPA
         
 ENDM LoadMaze
+
+
+
+LoadIntro MACRO 
+    PUSHA
+	
+		LOCAL ERROR
+		LOCAL CONTINUE
+  
+            MOV DX, OFFSET INTRO_FILE
+            JMP CONTINUE
+            
+        ERROR:
+            MOV AH, 4CH
+            MOV AL, 0
+            INT 21H
+                                       
+        
+        CONTINUE:
+            
+            ;; OPEN THE INTRO FILE
+            MOV AH, 3DH
+            MOV AL, 00
+            INT 21H
+            
+            ;; IF FILE COULDN'T BE FOUND, EXIT THE PROGRAM
+            JC ERROR
+            
+            ;; PUSH AX (FILE HANDLE)
+            PUSH AX               
+            
+            MOV AX, 25
+            MOV DX, 82
+            MUL DX                                               
+            
+            
+            ;; READ THE INTRO FILE INTO INTRO VARIABLE
+            POP BX
+            MOV CX, AX
+            MOV AH, 3FH
+            MOV DX, OFFSET INTRO
+            INT 21H  
+            
+    POPA
+        
+ENDM LoadIntro
+
+
+DrawIntro MACRO
+    PUSHA    
+		
+		LOCAL PRINT
+		LOCAL NEW_LINE
+		LOCAL INCREMENT
+		LOCAL CHECK
+		
+        LoadIntro
+		
+		;; SET CURSOR TO INVISIBLE
+		RemoveCursor
+		
+		;; CLEAR THE SCREEN
+		MOV AH, 06
+		MOV AL, 00
+		MOV BH, 07
+		MOV CH, 00
+		MOV CL, 00
+		MOV DH, 24
+		MOV DL, 79
+		INT 10H
+    
+		;; MOVE CURSOR TO START OF SCREEN
+		MOV AH, 02
+		MOV BH, 00
+		MOV DL, 00
+		MOV DH, 00
+		INT 10H
+		
+		
+        MOV BX, OFFSET INTRO
+		PUSH BX
+                         
+                         
+        ;; PRINT AS LONG AS IT DIDN'T REACH '$' (SAME AS INT 21H , AH = 9)    
+        PRINT:
+			CMP [BX], ' '
+			JZ INCREMENT 
+			
+			CMP [BX], 9
+			JZ INCREMENT
+			
+			CMP [BX], 13
+			JZ INCREMENT
+			
+			
+			CMP [BX], 10
+			JZ NEW_LINE
+			
+			
+			mov ah,9 ;Display
+			mov al,' ' ;SPACE
+			mov bh,0 ;Page 0
+			mov cx,1h ;1 time
+			mov bl,022H ;
+			int 10h
+			JMP INCREMENT
+			
+			NEW_LINE:
+				mov ah,3h
+				mov bh,0h
+				int 10h
+				MOV DL, 0
+				INC DH
+				mov ah,2
+				int 10h
+				JMP CHECK
+				
+			INCREMENT:
+				mov ah,3h
+				mov bh,0h
+				int 10h
+				INC DL
+				mov ah,2
+				int 10h
+				
+			CHECK:
+				POP BX
+				INC BX
+				PUSH BX
+				CMP [BX], '$'
+				JNZ PRINT
+				
+				
+		SLEEP 100
+    
+    POPA
+                
+ENDM DrawIntro  
+
+
+SLEEP MACRO INTERVAL
+    PUSHA
+        
+        MOV AX, 0FFFFH
+        MOV BX, INTERVAL
+        MUL BX
+        MOV CX, AX
+        XCHG CX, DX
+        MOV AH, 86H
+        INT 15H
+    
+    POPA
+ENDM
 
 
 
@@ -620,7 +781,7 @@ ENDM DetectAction
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -1451,7 +1612,7 @@ RandUnique MACRO
             DEC RAND_2_LNS
             LOOP GENERATE 
 		
-		; reset the reference array to its initial values with its length
+		;; reset the reference array to its initial values with its length
 		MOV SI, OFFSET RAND_2
 		MOV CX, 1
 		

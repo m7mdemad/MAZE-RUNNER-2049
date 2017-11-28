@@ -15,6 +15,9 @@ EASY_MAZE           DB       "MAZE_E.txt",0
 HARD_MAZE           DB       "MAZE_H.txt",0
 MAZE                DB       2100 DUP('$')
 
+INTRO_FILE       	DB       "intro.txt",0
+INTRO       		DB       2100 DUP('$')
+
 X1                  DB       0 ; PLAYER 1 POSITION
 Y1                  DB       1
 
