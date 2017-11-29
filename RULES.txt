@@ -1,7 +1,7 @@
 
 
-
 				RULES ARE SIMPLE:
+
 							* Player1 will use the ARROW KEYS to move and the M KEY to plant bombs.
 							
 							* Player2 will use the W,A,S,D KEYS to move and the F KEY to plant bombs.
