@@ -18,17 +18,18 @@ MAZE                DB       2100 DUP('$')
 INTRO_FILE       	DB       "INTRO.txt",0
 INTRO       		DB       2100 DUP('$')
 
+MODES_FILE       	DB       "MODE.txt",0
+MODES       		DB       2100 DUP('$')
+
 RULES_FILE	       	DB       "RULES.txt",0
 RULES				DB		 2100 DUP('$')
-
-
 
 NAME1_FILE			DB		 "P1_NAME.txt",0
 NAME2_FILE			DB		 "P2_NAME.txt",0
 NAMES				DB		 2100 DUP('$')
 
-P1_NAME				DB		 21, ?, 20 DUP('$')
-P2_NAME				DB		 21, ?, 20 DUP('$')
+P1_NAME				DB		 20, ?, 21 DUP('$')
+P2_NAME				DB		 20, ?, 21 DUP('$')
 
 X1                  DB       0 ; PLAYER 1 POSITION
 Y1                  DB       1
@@ -120,6 +121,7 @@ MAIN    PROC FAR
         
 		GetNames
 		SetInitials
+		GetMode
 		PrintRules
         DrawIntro
         SLEEP 50

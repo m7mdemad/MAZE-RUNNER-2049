@@ -1,0 +1,14 @@
+
+
+
+
+																								 1 => The Easy Mode
+
+																								 2 => The Hard Mode
+
+
+
+
+																								 Please enter the number of mode:
+
+																								 There's no need to press Enter KEY
