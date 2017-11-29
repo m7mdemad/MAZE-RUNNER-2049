@@ -6,12 +6,29 @@ DrawMaze MACRO
 		LOCAL INCREMENT
 		LOCAL CHECK
 		
-        RandomizeMaze 
+		;; generates a random number in random variable to indicate which maze will be drawn
+        Randomize RANDOM, MAZES_N 
+		
+		;; load the maze with the specific number index to the maze variable 
         LoadMaze
 		
-		;; SET CURSOR TO INVISIBLE
-		RemoveCursor
-		
+		;; CLEAR THE SCREEN
+		ClearScreen
+    
+		;; MOVE CURSOR TO START OF SCREEN
+		MoveCursor 0, 0
+	
+		;; PRINT THE MAZE TO THE SCREEN WITH A LIGHT BLUE COLOR    
+        PrintString MAZE, 33H
+    
+    
+    POPA
+                
+ENDM DrawMaze   
+
+ClearScreen MACRO
+	PUSHA
+	
 		;; CLEAR THE SCREEN
 		MOV AH, 06
 		MOV AL, 00
@@ -20,38 +37,47 @@ DrawMaze MACRO
 		MOV CL, 00
 		MOV DH, 24
 		MOV DL, 79
-		INT 10H
-    
-		;; MOVE CURSOR TO START OF SCREEN
-		MOV AH, 02
-		MOV BH, 00
-		MOV DL, 00
-		MOV DH, 00
-		INT 10H
+		INT 10H	
+	
+	POPA
+ENDM ClearScreen
+
+;; PRINTS A STRING UNTIL IT REACHES THE '$', JUST LIKE THE INT 21H
+PrintString MACRO STRING, COLOR
+	PUSHA
 		
+		LOCAL PRINT
+		LOCAL NEW_LINE
+		LOCAL INCREMENT
+		LOCAL CHECK
 		
-        MOV BX, OFFSET MAZE
+		MOV BX, OFFSET STRING
+		
 		PUSH BX
-                         
-                         
-        ;; PRINT AS LONG AS IT DIDN'T REACH '$' (SAME AS INT 21H , AH = 9)    
-        PRINT:
+		PRINT:
+			
+			;; IF IT'S A SPACE JUST INCREMENT THE CURSOR POSITION
 			CMP [BX], ' '
 			JZ INCREMENT
+			
 			
 			CMP [BX], 13
 			JZ INCREMENT
 			
+			CMP [BX], 9
+			JZ INCREMENT
 			
+			;; IF IT'S A NEW LINE GO TO THE NEXT LINE
 			CMP [BX], 10
 			JZ NEW_LINE
 			
 			
+			;; PRINT THE CHAR
 			mov ah,9 ;;Display
 			mov al,' ' ;;SPACE
 			mov bh,0 ;;Page 0
 			mov cx,1h ;;1 time
-			mov bl,033H ;;
+			mov bl,COLOR ;; color
 			int 10h
 			JMP INCREMENT
 			
@@ -79,11 +105,11 @@ DrawMaze MACRO
 				PUSH BX
 				CMP [BX], '$'
 				JNZ PRINT
-    
-    
-    POPA
-                
-ENDM DrawMaze      
+		
+	
+	
+	POPA
+ENDM PrintString
 
 
 RandomizeMaze MACRO 
@@ -232,95 +258,29 @@ ENDM LoadIntro
 DrawIntro MACRO
     PUSHA    
 		
-		LOCAL PRINT
-		LOCAL NEW_LINE
-		LOCAL INCREMENT
-		LOCAL CHECK
 		
+		
+		;; load the intro file to the intro variable 
         LoadIntro
 		
-		;; SET CURSOR TO INVISIBLE
-		RemoveCursor
-		
 		;; CLEAR THE SCREEN
-		MOV AH, 06
-		MOV AL, 00
-		MOV BH, 07
-		MOV CH, 00
-		MOV CL, 00
-		MOV DH, 24
-		MOV DL, 79
-		INT 10H
+		ClearScreen
+		
+		;; remove cursor
+		RemoveCursor
     
 		;; MOVE CURSOR TO START OF SCREEN
-		MOV AH, 02
-		MOV BH, 00
-		MOV DL, 00
-		MOV DH, 00
-		INT 10H
+		MoveCursor 0, 0
+	
+		;; PRINT THE INTRO TO THE SCREEN WITH A GREEN COLOR    
+        PrintString INTRO, 22H
 		
-		
-        MOV BX, OFFSET INTRO
-		PUSH BX
-                         
-                         
-        ;; PRINT AS LONG AS IT DIDN'T REACH '$' (SAME AS INT 21H , AH = 9)    
-        PRINT:
-			CMP [BX], ' '
-			JZ INCREMENT 
-			
-			CMP [BX], 9
-			JZ INCREMENT
-			
-			CMP [BX], 13
-			JZ INCREMENT
-			
-			
-			CMP [BX], 10
-			JZ NEW_LINE
-			
-			
-			mov ah,9 ;;Display
-			mov al,' ' ;;SPACE
-			mov bh,0 ;;Page 0
-			mov cx,1h ;;1 time
-			mov bl,022H ;;
-			int 10h
-			JMP INCREMENT
-			
-			NEW_LINE:
-				mov ah,3h
-				mov bh,0h
-				int 10h
-				MOV DL, 0
-				INC DH
-				mov ah,2
-				int 10h
-				JMP CHECK
-				
-			INCREMENT:
-				mov ah,3h
-				mov bh,0h
-				int 10h
-				INC DL
-				mov ah,2
-				int 10h
-				
-			CHECK:
-				POP BX
-				INC BX
-				PUSH BX
-				CMP [BX], '$'
-				JNZ PRINT
-				
-				
-		SLEEP 100
-    
     POPA
                 
 ENDM DrawIntro  
 
 
+;; WAITS FOR AN AMOUNT OF TIME
 SLEEP MACRO INTERVAL
     PUSHA
         
@@ -336,21 +296,22 @@ SLEEP MACRO INTERVAL
 ENDM
 
 
-
+;; GETS THE INDEX OF THE CHAR AT THE X,Y LOCATION INSIDE THE MAZE AND PUT ITI INSIDE THE INDEX VARIABLE
 GetIndex MACRO X,Y
     PUSHA
   
-    MOV BL,Y
-    MOV AL,81
-    MUL BL
-    MOV BL, X
-    MOV BH, 0
-    ADD AX, BX
-    MOV INDEX, AX
+		MOV BL,Y
+		MOV AL,81
+		MUL BL
+		MOV BL, X
+		MOV BH, 0
+		ADD AX, BX
+		MOV INDEX, AX
         
     POPA
         
 ENDM GetIndex
+
 
 
 HandlePlayerMovement MACRO
@@ -374,8 +335,8 @@ HandlePlayerMovement MACRO
 		INT 16H
 		JZ CONTINUE
 		
-		FlushBuffer
 		
+		;; HANDLE EACH KEY ACCORDING TO ITS SCANCODE
 		CMP AH, UP_ARROW
 		JZ MOVE_UP1
 		
@@ -400,6 +361,7 @@ HandlePlayerMovement MACRO
 		CMP AH, D_LETTER
 		JZ MOVE_RIGHT2
 		
+		;; if not caught until here, ignore it because it's a bad key
 		JMP CONTINUE
 		
 		
@@ -457,7 +419,7 @@ HandlePlayerMovement MACRO
     POPA
 ENDM HandlePlayerMovement
     
-    
+;; move the player with x,y coordinates upwards    
 MoveUp	MACRO	X,Y
 	PUSHA
 		
@@ -492,6 +454,7 @@ MoveUp	MACRO	X,Y
 	POPA
 ENDM MoveUp
 
+;; move the player with x,y coordinates left
 MoveLeft	MACRO	X,Y
 	PUSHA
 		
@@ -508,7 +471,7 @@ MoveLeft	MACRO	X,Y
 		;; CHECK IF THE MAZE IS EMPTY AT THAT INDEX
 		MOV BX, INDEX
 		CMP MAZE[BX], ' '
-		JNZ MAKE_PEEP
+		JNZ MAKE_PEEP	;; if not valid, make a peep
 
 		;; CHANGE THE X POSITION OF THE PLAYER TO THE NEW POSITION
 		MOV X, CL
@@ -525,6 +488,7 @@ MoveLeft	MACRO	X,Y
 	POPA
 ENDM MoveLeft
 
+;; move the player with x,y coordinates down
 MoveDown	MACRO	X,Y
 	PUSHA
 		
@@ -541,7 +505,7 @@ MoveDown	MACRO	X,Y
 		;; CHECK IF THE MAZE IS EMPTY AT THAT INDEX
 		MOV BX, INDEX
 		CMP MAZE[BX], ' '
-		JNZ MAKE_PEEP
+		JNZ MAKE_PEEP	;; if not valid, make a peep
 
 		
 		;; CHANGE THE Y POSITION OF THE PLAYER TO THE NEW POSITION
@@ -559,6 +523,7 @@ MoveDown	MACRO	X,Y
 	POPA
 ENDM MoveDown
 
+;; move the player with x,y coordinates right
 MoveRight	MACRO	X,Y
 	PUSHA
 		
@@ -575,7 +540,7 @@ MoveRight	MACRO	X,Y
 		;; CHECK IF THE MAZE IS EMPTY AT THAT INDEX
 		MOV BX, INDEX
 		CMP MAZE[BX], ' '
-		JNZ MAKE_PEEP
+		JNZ MAKE_PEEP	;; if not valid, make a peep
 
 
 		;; CHANGE THE X POSITION OF THE PLAYER TO THE NEW POSITION
@@ -604,15 +569,15 @@ ClearPosition MACRO X, Y
 		INT 10H
 		
 		
-		MOV AH,9
-		MOV BH,0
-		MOV AL,44H
-		MOV CX,1H
-		MOV BL,000H
-		INT 10H
+		; MOV AH,9
+		; MOV BH,0
+		; MOV AL,44H
+		; MOV CX,1H
+		; MOV BL,000H
+		; INT 10H
 		  
 		
-		;; CLEAR THAT PLACE 
+		;; CLEAR THAT PLACE (print a space at it)
 		MOV AH, 02
 		MOV DL, ' '
 		INT 21H
@@ -624,6 +589,7 @@ ENDM ClearPosition
 Peep MACRO
 	PUSHA
 	
+		; CX = the frequency of the generated sound
 		MOV CX, 1000
 		IN AL, 061H
 		OR AL, 003H
@@ -675,11 +641,6 @@ Peep MACRO
 				IN AL, 061H
 				AND AL, 0FCH
 				OUT 061H, AL
-	
-		;; MAKE PEEP SOUND
-		MOV AH, 02H
-		MOV DL, 07H
-		INT 21H
 		
 	POPA
 
@@ -738,9 +699,22 @@ ENDM RemoveCursor
 
 FlushBuffer MACRO
 		PUSHA
+		
+			LOCAL AGAIN
+			LOCAL END
+
+			AGAIN:
+				;; CHECK IF A KEY WAS PRESSED
+				MOV AH, 01
+				INT 16H
+				JZ END		;; NO, END THE FUNCTION
+				
+				;; IF YES, FLUSH IT
+				MOV AH, 00
+				INT 16H
+				JMP AGAIN
 			
-			MOV AH, 00
-			INT 16H
+			END:
 		
 		POPA
 ENDM FlushBuffer
@@ -815,11 +789,12 @@ DetectAction MACRO
 		;; CHECK IF A KEY WAS PRESSED
 		MOV AH, 01
 		INT 16H
-		JZ CONTINUE
+		JZ CONTINUE	;; if no, skip
 		        
 
 		HandlePlayerFire
 		HandlePlayerMovement
+		FlushBuffer
 		
 		
 		
@@ -926,13 +901,13 @@ ENDM HandlePlayerFire
 Fire MACRO X, Y, P
     PUSHA
 
-    MOV DL,X
-    MOV DH,Y
-    MOV AL,P
-  
-    MoveCursor DL,DH
-    PlantBomb ;; PRINT THE BOMB
-    AddBomb DL,DH,AL ;; STORE ITS DATA
+		MOV DL,X
+		MOV DH,Y
+		MOV AL,P
+
+		MoveCursor DL,DH
+		PlantBomb ;; PRINT THE BOMB
+		AddBomb DL,DH,AL ;; STORE ITS DATA
             
   POPA
         
@@ -942,25 +917,26 @@ ENDM Fire
 MoveCursor MACRO X,Y
     PUSHA
 	
-  MOV DL,X
-  MOV DH,Y
-  MOV AH,02H
-  MOV BH,0
-  INT 10H 
+		MOV DL,X
+		MOV DH,Y
+		MOV AH,02H
+		MOV BH,0
+		INT 10H 
   
   POPA      
 ENDM MoveCursor
 
 ;;-------------------------------
+;; prints a bomb
 PlantBomb MACRO
     PUSHA
 	
-  MOV AH,9
-  MOV BH,0
-  MOV AL, BOMB_CHAR
-  MOV CX,1H
-  MOV BL,04fH
-  INT 10H
+		MOV AH,9
+		MOV BH,0
+		MOV AL, BOMB_CHAR
+		MOV CX,1H
+		MOV BL,04fH
+		INT 10H
     
 	POPA
         
@@ -1120,10 +1096,6 @@ CheckBombs MACRO
 			MOV [BX], 0
 			
 			JMP NEXT
-			
-			
-		
-		
 		
 		POS2:
 
@@ -1139,18 +1111,13 @@ CheckBombs MACRO
 			
 			JMP NEXT
 		
-		
-		
-		
 		NEXT:
 			INC SI
 			INC DI
 			INC BX
 			DEC CX
 			JNZ CHECK
-			
-			
-
+		
 	POPA
 ENDM CheckBombs
  

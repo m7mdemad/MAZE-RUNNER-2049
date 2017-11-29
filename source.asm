@@ -107,7 +107,9 @@ MAIN    PROC FAR
         MOV DS,AX
         
         DrawIntro
+        SLEEP 100
         DrawMaze
+        FlushBuffer
         
 
         MAINLOOP:
