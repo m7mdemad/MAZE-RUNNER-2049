@@ -15,12 +15,17 @@ EASY_MAZE           DB       "MAZE_E.txt",0
 HARD_MAZE           DB       "MAZE_H.txt",0
 MAZE                DB       2100 DUP('$')
 
-INTRO_FILE       	DB       "intro.txt",0
+INTRO_FILE       	DB       "INTRO.txt",0
 INTRO       		DB       2100 DUP('$')
+
+RULES_FILE	       	DB       "RULES.txt",0
+RULES				DB		 2100 DUP('$')
+
+
 
 NAME1_FILE			DB		 "P1_NAME.txt",0
 NAME2_FILE			DB		 "P2_NAME.txt",0
-TEMP_SCREEN			DB		 2100 DUP('$')
+NAMES				DB		 2100 DUP('$')
 
 P1_NAME				DB		 21, ?, 20 DUP('$')
 P2_NAME				DB		 21, ?, 20 DUP('$')
@@ -115,8 +120,9 @@ MAIN    PROC FAR
         
 		GetNames
 		SetInitials
+		PrintRules
         DrawIntro
-        SLEEP 100
+        SLEEP 50
         DrawMaze
         FlushBuffer
         

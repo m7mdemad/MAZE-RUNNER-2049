@@ -1,23 +1,24 @@
 
 
 
-
-
-
-						RULES ARE SIMPLE:
-									* Player1 will use the ARROW KEYS to move and the M KEY to plant bombs.
-									
-									* Player2 will use the W,A,S,D KEYS to move and the F KEY to plant bombs.
-									
-									* Your goal is to get out of the maze first.
-									
-									* If a player runs by a bomb, his controls will be shuffled for 20 moves.
-									
-									* After you plant a bomb, you can't plant another one unless you press
-												50 times on the key that plants bombs.
-												
-									* GOOD LUCK GETTING OUT OF THE MAZE
-									
-
+				RULES ARE SIMPLE:
+							* Player1 will use the ARROW KEYS to move and the M KEY to plant bombs.
+							
+							* Player2 will use the W,A,S,D KEYS to move and the F KEY to plant bombs.
+							
+							* Your goal is to get out of the maze first.
+							
+							* If a player runs by a bomb, his controls will be shuffled for 20 moves.
+							
+							* After you plant a bomb, you can't plant another one unless you press
+										15 times on the key that plants bombs.
+							
+							* Each player will be represented using the initial of his/her name.
+										
 						
-						Press any key to start the game.
+						
+																											GOOD LUCK GETTING OUT OF THE MAZE
+						
+				
+				
+				Press any key to start the game ...
