@@ -18,6 +18,13 @@ MAZE                DB       2100 DUP('$')
 INTRO_FILE       	DB       "intro.txt",0
 INTRO       		DB       2100 DUP('$')
 
+NAME1_FILE			DB		 "P1_NAME.txt",0
+NAME2_FILE			DB		 "P2_NAME.txt",0
+TEMP_SCREEN			DB		 2100 DUP('$')
+
+P1_NAME				DB		 21, ?, 20 DUP('$')
+P2_NAME				DB		 21, ?, 20 DUP('$')
+
 X1                  DB       0 ; PLAYER 1 POSITION
 Y1                  DB       1
 
@@ -106,6 +113,8 @@ MAIN    PROC FAR
         MOV AX,@DATA
         MOV DS,AX
         
+		GetNames
+		SetInitials
         DrawIntro
         SLEEP 100
         DrawMaze

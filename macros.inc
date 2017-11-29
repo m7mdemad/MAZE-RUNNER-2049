@@ -19,7 +19,7 @@ DrawMaze MACRO
 		MoveCursor 0, 0
 	
 		;; PRINT THE MAZE TO THE SCREEN WITH A LIGHT BLUE COLOR    
-        PrintString MAZE, 33H
+        DrawString MAZE, 33H
     
     
     POPA
@@ -42,8 +42,8 @@ ClearScreen MACRO
 	POPA
 ENDM ClearScreen
 
-;; PRINTS A STRING UNTIL IT REACHES THE '$', JUST LIKE THE INT 21H
-PrintString MACRO STRING, COLOR
+;; draws a string with colored spaces instead of its letters
+DrawString MACRO STRING, COLOR
 	PUSHA
 		
 		LOCAL PRINT
@@ -109,28 +109,189 @@ PrintString MACRO STRING, COLOR
 	
 	
 	POPA
+ENDM DrawString
+
+;; PRINTS A COLORED STRING UNTIL IT REACHES THE '$', JUST LIKE THE INT 21H
+PrintString MACRO STRING, COLOR
+	PUSHA
+		
+		LOCAL PRINT
+		LOCAL NEW_LINE
+		LOCAL INCREMENT
+		LOCAL CHECK
+		
+		MOV BX, OFFSET STRING
+		
+		PUSH BX
+		PRINT:
+			
+			;; IF IT'S A SPACE JUST INCREMENT THE CURSOR POSITION
+			CMP [BX], ' '
+			JZ INCREMENT
+			
+			
+			CMP [BX], 13
+			JZ INCREMENT
+			
+			CMP [BX], 9
+			JZ INCREMENT
+			
+			;; IF IT'S A NEW LINE GO TO THE NEXT LINE
+			CMP [BX], 10
+			JZ NEW_LINE
+			
+			
+			;; PRINT THE CHAR
+			mov ah,9 ;;Display
+			mov al,[bx] ;;SPACE
+			mov bh,0 ;;Page 0
+			mov cx,1h ;;1 time
+			mov bl,COLOR ;; color
+			int 10h
+			JMP INCREMENT
+			
+			NEW_LINE:
+				mov ah,3h
+				mov bh,0h
+				int 10h
+				MOV DL, 0
+				INC DH
+				mov ah,2
+				int 10h
+				JMP CHECK
+				
+			INCREMENT:
+				mov ah,3h
+				mov bh,0h
+				int 10h
+				INC DL
+				mov ah,2
+				int 10h
+				
+			CHECK:
+				POP BX
+				INC BX
+				PUSH BX
+				CMP [BX], '$'
+				JNZ PRINT
+		
+	
+	
+	POPA
 ENDM PrintString
 
+;; READS A STRING AND PUTS IT IN THE STRING VARIABLE
+ReadString MACRO STRING
+	PUSHA
+		
+		MOV DX, OFFSET STRING
+		MOV AH, 0AH
+		INT 21H
+	
+	POPA
+ENDM ReadString
 
-RandomizeMaze MACRO 
-    PUSHA
-  
-        ;; GET SYSTEM TIME
-        MOV AH, 2CH
-        INT 21H
-        
-        ;; MOVE HUNDREDTHS OF SECOND TO AX
-        MOV AL, DL
-        CBW
-        
-        ;; TAKE HUNDREDTHS OF SECOND MOD NUMBER OF MAZES TO GET A RANDOM NUMBER
-        DIV MAZES_N
-        MOV RANDOM, AH
 
-        
-    POPA
-        
-ENDM RandomizeMaze
+GetNames MACRO
+	PUSHA
+		
+		;; CLEAR THE SCREEN
+		ClearScreen
+		;; MOVE THE CURSOR TO THE START OF THE SCREEN
+		MoveCursor 0,0
+		
+		;; LOAD THE FIRST SCREEN OF ASKING PLAYER 1 FOR HIS NAME
+		LoadFile NAME1_FILE, TEMP_SCREEN
+		;; PRINT  THE SCREEN WITH A YELLOW COLOR FOR CHARS
+		PrintString TEMP_SCREEN, 0EH
+		;; MOVE THE CURSOR TO THE NAME LOCATION
+		MoveCursor 30 ,12
+		;; GET THE NAME OF PLAYER 1
+		ReadString P1_NAME
+		
+		;; CLEAR THE SCREEN
+		ClearScreen
+		
+		;; MOVE THE CURSOR TO THE START OF THE SCREEN
+		MoveCursor 0,0
+		
+		;; LOAD THE FIRST SCREEN OF ASKING PLAYER 2 FOR HIS NAME
+		LoadFile NAME2_FILE, TEMP_SCREEN
+		;; PRINT  THE SCREEN WITH A YELLOW COLOR FOR CHARS
+		PrintString TEMP_SCREEN, 0EH
+		;; MOVE THE CURSOR TO THE NAME LOCATION
+		MoveCursor 30 ,12
+		;; GET THE NAME OF PLAYER 2
+		ReadString P2_NAME
+		
+		;; CLEAR THE SCREEN
+		ClearScreen
+		
+		;; MOVE THE CURSOR TO THE START OF THE SCREEN
+		MoveCursor 0,0
+	
+	
+	POPA
+ENDM GetNames
+
+
+SetInitials MACRO
+	PUSHA
+		
+		;; SET THE CHAR OF PLAYER1 TO HIS NAME INITIAL 
+		MOV BX, 2
+		MOV SI, OFFSET P1_NAME
+		MOV AL, SI[BX]
+		MOV P1_CHAR, AL
+		
+		;; SET THE CHAR OF PLAYER2 TO HIS NAME INITIAL 
+		MOV BX, 2
+		MOV SI, OFFSET P2_NAME
+		MOV AL, SI[BX]
+		MOV P2_CHAR, AL
+		
+	POPA
+ENDM SetInitials
+
+PrintRules MACRO
+	PUSHA
+		
+		;; CLEAR THE SCREEN
+		ClearScreen
+		;; LOAD THE FIRST SCREEN OF ASKING PLAYER 1 FOR HIS NAME
+		LoadFile NAME1_FILE, TEMP_SCREEN
+		;; PRINT  THE SCREEN WITH A YELLOW COLOR FOR CHARS
+		PrintString TEMP_SCREEN, 0EH
+		;; MOVE THE CURSOR TO THE NAME LOCATION
+		MoveCursor 30 ,12
+		;; GET THE NAME OF PLAYER 1
+		ReadString P1_NAME
+		
+		;; CLEAR THE SCREEN
+		ClearScreen
+		
+		;; MOVE THE CURSOR TO THE START OF THE SCREEN
+		MoveCursor 0,0
+		
+		;; LOAD THE FIRST SCREEN OF ASKING PLAYER 2 FOR HIS NAME
+		LoadFile NAME2_FILE, TEMP_SCREEN
+		;; PRINT  THE SCREEN WITH A YELLOW COLOR FOR CHARS
+		PrintString TEMP_SCREEN, 0EH
+		;; MOVE THE CURSOR TO THE NAME LOCATION
+		MoveCursor 30 ,12
+		;; GET THE NAME OF PLAYER 2
+		ReadString P2_NAME
+		
+		;; CLEAR THE SCREEN
+		ClearScreen
+		
+		;; MOVE THE CURSOR TO THE START OF THE SCREEN
+		MoveCursor 0,0
+	
+	
+	POPA
+ENDM PrintRules
+
 
 
 LoadMaze MACRO 
@@ -210,13 +371,13 @@ ENDM LoadMaze
 
 
 
-LoadIntro MACRO 
+LoadFile MACRO FILE, DEST
     PUSHA
 	
 		LOCAL ERROR
 		LOCAL CONTINUE
   
-            MOV DX, OFFSET INTRO_FILE
+            MOV DX, OFFSET FILE
             JMP CONTINUE
             
         ERROR:
@@ -247,12 +408,12 @@ LoadIntro MACRO
             POP BX
             MOV CX, AX
             MOV AH, 3FH
-            MOV DX, OFFSET INTRO
+            MOV DX, OFFSET DEST
             INT 21H  
             
     POPA
         
-ENDM LoadIntro
+ENDM LoadFile
 
 
 DrawIntro MACRO
@@ -261,7 +422,7 @@ DrawIntro MACRO
 		
 		
 		;; load the intro file to the intro variable 
-        LoadIntro
+        LoadFile INTRO_FILE, INTRO
 		
 		;; CLEAR THE SCREEN
 		ClearScreen
@@ -273,7 +434,7 @@ DrawIntro MACRO
 		MoveCursor 0, 0
 	
 		;; PRINT THE INTRO TO THE SCREEN WITH A GREEN COLOR    
-        PrintString INTRO, 22H
+        DrawString INTRO, 22H
 		
     POPA
                 
