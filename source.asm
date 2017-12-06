@@ -17,19 +17,30 @@ MAZE                DB       2100 DUP('$')
 
 INTRO_FILE       	DB       "INTRO.txt",0
 INTRO       		DB       2100 DUP('$')
-
+     
+OPTIONS_FILE      	DB       "OPTION.txt",0
+     
 MODES_FILE       	DB       "MODE.txt",0
 MODES       		DB       2100 DUP('$')
 
 RULES_FILE	       	DB       "RULES.txt",0
 RULES				DB		 2100 DUP('$')
 
+SCORE_FILE          DB       "SCORE.txt",0
+SCOREBAR            DB       2100 DUP('$')
+
 NAME1_FILE			DB		 "P1_NAME.txt",0
 NAME2_FILE			DB		 "P2_NAME.txt",0
 NAMES				DB		 2100 DUP('$')
 
-P1_NAME				DB		 20, ?, 21 DUP('$')
-P2_NAME				DB		 20, ?, 21 DUP('$')
+P1_NAME				DB		 20, ?, 21 DUP('$') ; STORE THE NAME OF PLAYER1
+P2_NAME				DB		 20, ?, 21 DUP('$') ; STORE THE NAME OF PLAYER2
+
+             
+WINNER_NO           DB       ? 
+WINNER_FILE			DB		 "WIN.txt",0
+WIN 				DB		 2100 DUP('$')    
+
 
 X1                  DB       0 ; PLAYER 1 POSITION
 Y1                  DB       1
@@ -47,10 +58,7 @@ BOMBY               DB       50 DUP(-1) ; ARRAY OF BOMBS Y COORDINATES
 BOMB_ACTIVE         DB       50 DUP(3)  ; 0-> ACTIVE, 1-> PLAYER1 PLANTED IT BUT NOT YET ACTIVE
                                         ; 2-> PLAYER2 PLANTED BOMB
 
-B_COUNT             DW       1
-         
-BOMB_T_S            DB       100 DUP(63) ; SECOND - TIME THE BOMB PLANTED IN (3 IS EQUAL TO POSTPONE)
-BOMB_T_M            DB       100 DUP(0)  ; MINUTE
+B_COUNT             DW       1 
 
 P1_POSTPONE         DB       0 ; FREEZE PLAYER ONE FOR P1_POSPONE MOVES
 P2_POSTPONE         DB       0 ; FREEZE PLAYER TWO FOR P2_POSPONE MOVES
@@ -63,35 +71,43 @@ RAND_2              DB      1,2,3,4
 
 
 RAND_2_LNS          DB      4
+     
 
-R_COUNT             DB      0
-R1                  DB      0
-R2                  DB      0
-  
+HOLD_FIRE_1         DB      0 ; HOLD THE FIRE OF PLAYER1 FOR HOLD_FIRE_1 MOVES
+HOLD_FIRE_2         DB      0 ; HOLD THE FIRE OF PLAYER2 FOR HOLD_FIRE_2 MOVES
         
+                             
+XP                  DB      ?
+YP                  DB      ?
+                              
+ASCII_RESULT        DB      3 dup('$')                              
+                              
 
-HOLD_FIRE_1         DB      0
-HOLD_FIRE_2         DB      0
-        
+END_GAME            DB      0 
 
 ;====== KEYS SCANCODE ============
+                       
+                       
+; CHANGE ON STEPPING ON BOMB
 UP_ARROW		    DB   	48H
 DOWN_ARROW	     	DB		50H
 RIGHT_ARROW		    DB		4DH
 LEFT_ARROW		    DB		4BH
-
-
-UP_ARROW_PER		EQU   	48H
-DOWN_ARROW_PER		EQU		50H
-RIGHT_ARROW_PER		EQU		4DH
-LEFT_ARROW_PER		EQU		4BH
-
+                         
 
 
 W_LETTER    		DB		11H
 A_LETTER    		DB		1EH
 S_LETTER		    DB		1FH
 D_LETTER		    DB		20H  
+                       
+                       
+; NEVER CHANGE
+UP_ARROW_PER		EQU   	48H
+DOWN_ARROW_PER		EQU		50H
+RIGHT_ARROW_PER		EQU		4DH
+LEFT_ARROW_PER		EQU		4BH
+
 
 
 W_LETTER_PER		EQU		11H
@@ -114,22 +130,33 @@ M_LETTER		    EQU		32H
         ; HARD MAZE SPECS: 39 10 2 2 0
         
         
-        .code
+        .code                
 MAIN    PROC FAR               
         MOV AX,@DATA
         MOV DS,AX
         
-		GetNames
-		SetInitials
-		GetMode
-		PrintRules
-        DrawIntro
-        SLEEP 50
-        DrawMaze
-        FlushBuffer
-        
-
-        MAINLOOP:
+		   
+		   
+		                    
+		GETTING_STARTED:
+    		
+    		GetName P1_NAME,NAME1_FILE
+    		Options
+    		GetName P2_NAME,NAME2_FILE
+    		SetInitials
+    		GetMode
+    		PrintRules
+            DrawIntro
+            SLEEP 20
+            DrawMaze
+            DrawScorebar
+            SetNames
+            FlushBuffer
+            
+                  MAINLOOP:     
+            
+             CMP END_GAME,0
+             JNZ WIN_SCREEN
                 
                 
 			PrintPlayers
@@ -139,20 +166,40 @@ MAIN    PROC FAR
 			TestBombs 1,X1,Y1
 			TestBombs 2,X2,Y2
 			
-			CheckBombs
+			CheckBombs 
+			   
+			SetScore
+			 
+			Winner
 			
 			JMP MAINLOOP
 			
             
             
+        WIN_SCREEN:
+                 
+            DrawWinScreen 
+            SLEEP 50
             
-
-
-        ; TERMINATE
-        MOV AH, 4CH
-        MOV AL, 0
-        INT 21H
-
+        
+       
 
 MAIN    ENDP
-        END MAIN
+        END MAIN 
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    

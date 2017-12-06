@@ -21,10 +21,25 @@ DrawMaze MACRO
 		;; PRINT THE MAZE TO THE SCREEN WITH A LIGHT BLUE COLOR    
         DrawString MAZE, 33H
     
-    
+        ;;DrawScorebar
+		
     POPA
                 
 ENDM DrawMaze   
+
+
+DrawScorebar MACRO
+	PUSHA
+
+		LoadFile SCORE_FILE,SCOREBAR
+	
+		MoveCursor 0,22
+	
+		PrintString SCOREBAR, 0FH
+	
+	POPA
+ENDM DrawScorebar
+
 
 ClearScreen MACRO
 	PUSHA
@@ -184,8 +199,8 @@ ENDM PrintString
 ReadString MACRO STRING
 	PUSHA
 		
-		MOV DX, OFFSET STRING
 		MOV AH, 0AH
+		MOV DX, OFFSET STRING
 		INT 21H
 	
 	POPA
@@ -193,48 +208,122 @@ ENDM ReadString
 
 
 GetNames MACRO
+	 PUSHA
+		
+		 ;; CLEAR THE SCREEN
+		 ClearScreen
+		 ;; MOVE THE CURSOR TO THE START OF THE SCREEN
+		 MoveCursor 0,0
+		
+		 ;; LOAD THE FIRST SCREEN OF ASKING PLAYER 1 FOR HIS NAME
+		 LoadFile NAME1_FILE, NAMES
+		 ;; PRINT  THE SCREEN WITH A YELLOW COLOR FOR CHARS
+		 PrintString NAMES, 0EH
+		 ;; MOVE THE CURSOR TO THE NAME LOCATION
+		 MoveCursor 30 ,12
+		 ;; GET THE NAME OF PLAYER 1
+		 ReadString P1_NAME
+		
+		 ;; CLEAR THE SCREEN
+		 ClearScreen
+		
+		 ;; MOVE THE CURSOR TO THE START OF THE SCREEN
+		 MoveCursor 0,0
+		
+		 ;; LOAD THE SECOND SCREEN OF ASKING PLAYER 2 FOR HIS NAME
+		 LoadFile NAME2_FILE, NAMES
+		 ;; PRINT  THE SCREEN WITH A YELLOW COLOR FOR CHARS
+		 PrintString NAMES, 0EH
+		 ;; MOVE THE CURSOR TO THE NAME LOCATION
+		 MoveCursor 30 ,12
+		 ;; GET THE NAME OF PLAYER 2
+		 ReadString P2_NAME
+		
+		 ;; CLEAR THE SCREEN
+		 ClearScreen
+		
+		 ;; MOVE THE CURSOR TO THE START OF THE SCREEN
+		 MoveCursor 0,0
+	
+	
+	 POPA
+ ENDM GetNames
+
+
+GetName MACRO P_NAME,NAME_FILE
+	 PUSHA
+		
+		 ;; CLEAR THE SCREEN
+		 ClearScreen
+		 ;; MOVE THE CURSOR TO THE START OF THE SCREEN
+		 MoveCursor 0,0
+		
+		 ;; LOAD THE FIRST SCREEN OF ASKING PLAYER 1 FOR HIS NAME
+		 LoadFile NAME_FILE, NAMES
+		 ;; PRINT  THE SCREEN WITH A YELLOW COLOR FOR CHARS
+		 PrintString NAMES, 0EH
+		 ;; MOVE THE CURSOR TO THE NAME LOCATION
+		 MoveCursor 30 ,12
+		 ;; GET THE NAME OF PLAYER 1
+		 ReadString P_NAME
+
+		 MoveCursor 0,0
+	
+	
+	 POPA
+ ENDM GetName
+
+ Options MACRO 
+	 PUSHA
+	
+	LOCAL AGAIN, EXIT, END_IT
+	
+	AGAIN:
+		;; CLEAR THE SCREEN
+		 ClearScreen
+		 ;; MOVE THE CURSOR TO THE START OF THE SCREEN
+		 MoveCursor 0,0
+		
+		 ;; LOAD THE FIRST SCREEN OF ASKING PLAYER 1 FOR HIS NAME
+		 LoadFile OPTIONS_FILE, MAZE
+		 ;; PRINT  THE SCREEN WITH A YELLOW COLOR FOR CHARS
+		 PrintString MAZE, 0FH
+		 ;; MOVE THE CURSOR TO THE NAME LOCATION
+		
+        
+		 MOV AH,0
+		 INT 16H
+		 CMP AH,3CH
+		 JZ END_IT
+		 
+		 CMP AH, 01H
+		 JZ EXIT
+		 
+		 JMP AGAIN
+		 
+	EXIT:
+		
+		TERMINATE
+		
+	END_IT:
+		 
+	
+		
+		 ;; TO BE CONTINUED
+	 POPA
+ ENDM Options
+
+ TERMINATE MACRO
 	PUSHA
 		
-		;; CLEAR THE SCREEN
 		ClearScreen
-		;; MOVE THE CURSOR TO THE START OF THE SCREEN
-		MoveCursor 0,0
-		
-		;; LOAD THE FIRST SCREEN OF ASKING PLAYER 1 FOR HIS NAME
-		LoadFile NAME1_FILE, NAMES
-		;; PRINT  THE SCREEN WITH A YELLOW COLOR FOR CHARS
-		PrintString NAMES, 0EH
-		;; MOVE THE CURSOR TO THE NAME LOCATION
-		MoveCursor 30 ,12
-		;; GET THE NAME OF PLAYER 1
-		ReadString P1_NAME
-		
-		;; CLEAR THE SCREEN
-		ClearScreen
-		
-		;; MOVE THE CURSOR TO THE START OF THE SCREEN
-		MoveCursor 0,0
-		
-		;; LOAD THE SECOND SCREEN OF ASKING PLAYER 2 FOR HIS NAME
-		LoadFile NAME2_FILE, NAMES
-		;; PRINT  THE SCREEN WITH A YELLOW COLOR FOR CHARS
-		PrintString NAMES, 0EH
-		;; MOVE THE CURSOR TO THE NAME LOCATION
-		MoveCursor 30 ,12
-		;; GET THE NAME OF PLAYER 2
-		ReadString P2_NAME
-		
-		;; CLEAR THE SCREEN
-		ClearScreen
-		
-		;; MOVE THE CURSOR TO THE START OF THE SCREEN
-		MoveCursor 0,0
-	
+		MOV AH, 4CH
+		INT 21H
 	
 	POPA
-ENDM GetNames
+ENDM TERMINATE
 
-
+ 
 SetInitials MACRO
 	PUSHA
 		
@@ -416,7 +505,7 @@ LoadFile MACRO FILE, DEST
         
         CONTINUE:
             
-            ;; OPEN THE INTRO FILE
+            ;; OPEN THE FILE
             MOV AH, 3DH
             MOV AL, 00
             INT 21H
@@ -432,7 +521,7 @@ LoadFile MACRO FILE, DEST
             MUL DX                                               
             
             
-            ;; READ THE INTRO FILE INTO INTRO VARIABLE
+            ;; READ THE INTRO FILE INTO THE VARIABLE
             POP BX
             MOV CX, AX
             MOV AH, 3FH
@@ -446,7 +535,6 @@ ENDM LoadFile
 
 DrawIntro MACRO
     PUSHA    
-		
 		
 		
 		;; load the intro file to the intro variable 
@@ -983,6 +1071,7 @@ DetectAction MACRO
 
 		HandlePlayerFire
 		HandlePlayerMovement
+		HandleExit
 		FlushBuffer
 		
 		
@@ -993,11 +1082,6 @@ CONTINUE:
     POPA
         
 ENDM DetectAction
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -1085,6 +1169,30 @@ HandlePlayerFire MACRO
         
 ENDM HandlePlayerFire
 
+
+HandleExit MACRO
+    PUSHA
+		LOCAL CONTINUE
+		LOCAL EXIT
+
+        ;; GET KEY PRESSED 
+		MOV AH, 01
+		INT 16H
+		JZ CONTINUE
+		
+		CMP AH, 01H
+		JZ EXIT
+		
+		JMP CONTINUE
+		
+		EXIT:
+		    TERMINATE
+			
+		CONTINUE:
+	
+  POPA
+        
+ENDM HandleExit
 ;;-------------------------------
 ;; PRINT THE BOMB ON THE SCREEN AND STORE ITS DATA IN BOMBX, BOMBY, BOMB_ACTIVE
 Fire MACRO X, Y, P
@@ -1124,7 +1232,7 @@ PlantBomb MACRO
 		MOV BH,0
 		MOV AL, BOMB_CHAR
 		MOV CX,1H
-		MOV BL,04fH
+		MOV BL,004H ;; 04F
 		INT 10H
     
 	POPA
@@ -1172,7 +1280,7 @@ StoreY MACRO Y
 ENDM StoreY
 
 ;;-------------------------------
-
+;; INDICATE IF THE BOMB IS PLANTED BY FIRST PLAYER OR SECOND ONE
 StoreCond MACRO P
    PUSHA
 	
@@ -1189,7 +1297,6 @@ ENDM StoreCond
 
 
 ;;------------------Explosion---------------------------
-
 
 ;; CHECK IF ANY BOMB GOING TO EXPLODE
 TestBombs MACRO S,X,Y
@@ -1322,12 +1429,6 @@ Explode MACRO COUNT,G
        
         ResetXY DX
 		
-		LEA SI,BOMBX
-		ADD SI,COUNT 
-
-		LEA DI,BOMBY
-        ADD DI,COUNT 
-		
         Bang AH
       			
 
@@ -1336,7 +1437,7 @@ ENDM Explode
 
    
 ;;-------------------------------
-;; 
+;; CLEAR THE COORDINATES OF THE BOMB  
 ResetXY MACRO N
   PUSHA
 
@@ -1355,6 +1456,8 @@ ENDM ResetXY
 
 
 
+;;--------------------------------------------
+;; PERFORM THE AFFECT OF THE BOMB ON THE PLAYERS
 Bang MACRO S
   PUSHA
     LOCAL P_2
@@ -1384,6 +1487,8 @@ Bang MACRO S
 ENDM Bang
 
 
+;;--------------------------------------------
+;; SHUFFLE THE CONTROLS OF THE FIRST PLAYER
 Shuffle1 MACRO 
   PUSHA
         
@@ -1409,7 +1514,7 @@ ENDM Shuffle1
 
 
 ;;--------------------------------------------
-
+;; CHANGE THE SCANCODE OF THE UP KEY OF THE FIRST PLAYER (^)
 Select_UP_1 MACRO S
    PUSHA
     LOCAL END_IT
@@ -1449,7 +1554,7 @@ Select_UP_1 MACRO S
    POPA
 ENDM Select_UP_1
 ;;--------------------------------------------
-
+;; CHANGE THE SCANCODE OF THE DOWN KEY OF THE FIRST PLAYER 
 Select_DOWN_1 MACRO S
    PUSHA
     LOCAL END_IT
@@ -1489,7 +1594,7 @@ Select_DOWN_1 MACRO S
    POPA
 ENDM Select_DOWN_1
 ;;--------------------------------------------
-
+;; CHANGE THE SCANCODE OF THE LEFT KEY OF THE FIRST PLAYER (<-)
 Select_LEFT_1 MACRO S
    PUSHA
     LOCAL END_IT
@@ -1529,7 +1634,7 @@ Select_LEFT_1 MACRO S
    POPA
 ENDM Select_LEFT_1
 ;;--------------------------------------------
-
+;; CHANGE THE SCANCODE OF THE RIGHT KEY OF THE FIRST PLAYER (->)
 Select_RIGHT_1 MACRO S
    PUSHA
     LOCAL END_IT
@@ -1571,7 +1676,7 @@ ENDM Select_RIGHT_1
 
 
 ;;--------------------------------------------W->1,2->S,3->A,4->D
-
+;; SHUFFLE THE CONTROLS OF THE SECOND PLAYER 
 Shuffle2 MACRO 
   PUSHA
         
@@ -1594,7 +1699,8 @@ Shuffle2 MACRO
 	    
   POPA	
 ENDM Shuffle2
-
+;---------------------------------------
+;; CHANGE THE SCANCODE OF THE UP KEY OF THE SECOND PLAYER (W)
 Select_UP_2 MACRO S
    PUSHA
     LOCAL END_IT
@@ -1636,7 +1742,7 @@ Select_UP_2 MACRO S
    POPA
 ENDM Select_UP_2
 ;;--------------------------------------------
-
+;; CHANGE THE SCANCODE OF THE DOWN KEY OF THE SECOND PLAYER (S)
 Select_DOWN_2 MACRO S
    PUSHA
     LOCAL END_IT
@@ -1676,7 +1782,7 @@ Select_DOWN_2 MACRO S
    POPA
 ENDM Select_DOWN_2
 ;;--------------------------------------------
-
+;; CHANGE THE SCANCODE OF THE LEFT KEY OF THE SECOND PLAYER (A)
 Select_LEFT_2 MACRO S
    PUSHA
     LOCAL END_IT
@@ -1717,7 +1823,7 @@ Select_LEFT_2 MACRO S
    POPA
 ENDM Select_LEFT_2
 ;;--------------------------------------------
-
+;; CHANGE THE SCANCODE OF THE RIGHT KEY OF THE SECOND PLAYER (D) 
 Select_RIGHT_2 MACRO S
    PUSHA
     LOCAL END_IT
@@ -1760,6 +1866,7 @@ ENDM Select_RIGHT_2
 
 
 ;;--------------------------------------------
+;; GET A RANDOM NUMBER SMALLER THAN N AND STORE IT IN R
 Randomize MACRO R,N
 	PUSHA
 
@@ -1781,7 +1888,7 @@ Randomize MACRO R,N
 ENDM Randomize
 
 ;;---------------------------------------------------------------
-
+;; GENERATE RANDOM FOUR RANDOM NUMBERS BETWEEN 1 AND 4 WITHOUT ANY DUPLICATES (USED IN SHUFFLING THE CONTROLS)			 
 RandUnique MACRO
     PUSHA  
         
@@ -1830,8 +1937,7 @@ RandUnique MACRO
 			INC CX
 			CMP CX, 5
 			JNZ RESET
-			
-			
+		
 		MOV RAND_2_LNS, 4
 		
     
@@ -1839,4 +1945,192 @@ RandUnique MACRO
     POPA
 ENDM	RandUnique
 
+;-------------------------------------------
+;; CHECK IF THERE IS A WINNER OR NOT YET
+Winner MACRO 
+	PUSHA
+	
+	LOCAL P1_WIN
+	LOCAL P2_WIN
+	LOCAL ANNOUNCE
+	LOCAL END_IT
+		;; SEE IF PLAYER ONE REACH THE END
+		CMP X1,78
+		JZ P1_WIN
+		
+		;; SEE IF PLAYER TWO REACH THE END			
+		CMP X2,78
+		JZ P2_WIN
+		
+		JMP END_IT
+		
+		P1_WIN:
+			MOV AL,1
+			JMP ANNOUNCE
+			
+		P2_WIN:
+			MOV AL,2
+			JMP ANNOUNCE
+			
+		ANNOUNCE:
+			MOV END_GAME,1
+            MOV WINNER_NO,AL
+			   		
+                 		
 
+	END_IT:	
+	
+	POPA
+ENDM Winner
+
+
+;; CLEAR THE MAZE AND ANNOUNCE THE WINNER
+DrawWinScreen MACRO
+	PUSHA
+	
+	LOCAL END_IT
+        
+		;; PRINT THE CUP 
+	    LoadFile WINNER_FILE, WIN
+		
+		ClearScreen
+		
+		MoveCursor 0, 0
+	 
+        DrawString WIN, 0E0H
+		
+		;; PRINT THE WINNER NAME ON THE CUP
+		MoveCursor 33,20
+		MOV XP,33
+		MOV YP,20
+		
+		CMP WINNER_NO,2
+		JE PRINT_P2
+		
+		;; ANNOUNCE PLAYER1 THE WINNER
+		PrintName P1_NAME
+		JMP END_IT
+		
+		;; ANNOUNCE PLAYER2 THE WINNER
+		PRINT_P2:
+			PrintName P2_NAME
+		   
+		END_IT:
+	
+	POPA
+ENDM DrawWinScreen 
+
+
+
+;; PRINT THE NAME OF THE WINNER
+PrintName MACRO P_NAME
+	PUSHA
+	
+
+	LOCAL PRINT_NAME
+	LOCAL PRINT_CHAR
+	LOCAL NEXT
+	
+		LEA SI,P_NAME
+		;; SKIP FIRST TWO CHAR 
+		ADD SI,2
+		MOV CX,20
+		
+		PRINT_NAME:
+			CMP [SI],'$'
+			JZ NEXT
+			
+			CMP [SI],65
+			JL NEXT
+			
+			JMP PRINT_CHAR
+			
+		PRINT_CHAR:
+			MOV AH,9
+			MOV BH,0
+			MOV AL,[SI]
+			PUSH CX
+			MOV CX,1H
+			MOV BL,00EH
+			INT 10H
+			POP CX
+			INC XP
+			MoveCursor XP,YP
+			JMP NEXT
+			
+		NEXT:
+			INC SI
+			LOOP PRINT_NAME
+		
+	
+	POPA
+ENDM PrintName
+
+
+;; SET PLAYERS NAMES IN SCOREBAR
+SetNames MACRO
+	PUSHA
+	
+		MoveCursor 0,23
+		MOV XP,0
+		MOV YP,23
+		
+		PrintName P1_NAME
+		
+		MoveCursor 0,24
+		MOV XP,0
+		MOV YP,24		
+		
+		PrintName P2_NAME
+		
+		
+		
+	POPA
+ENDM SetNames
+
+
+;; DISPLAY PLAYERS SCORES
+SetScore MACRO
+	PUSHA
+	
+	
+	    MOV CL,X1
+		ToAscii CL
+		MoveCursor 11,23
+        
+		;; PRINT PLAYER1 SCORE (X1)
+		MOV AH,9
+		LEA DX,ASCII_RESULT	
+		INT 21H
+		
+		MOV CL,X2
+		ToAscii CL
+		MoveCursor 11,24
+        
+		;; PRINT PLAYER2 SCORE (X2)
+		MOV AH,9
+		LEA DX,ASCII_RESULT	
+		INT 21H
+		
+	
+	POPA
+ENDM SetScore
+
+
+;; CONVERT INTEGER TO ASCII CODE AND STORE IT IN ASCII_RESULTS
+ToAscii MACRO HEX
+    PUSHA
+        
+        MOV SI, OFFSET ASCII_RESULT
+        MOV AL, HEX
+		MOV AH,00
+        MOV BL, 10
+        DIV BL
+        ADD AL, '0'
+        ADD AH, '0'
+        MOV [SI], AL
+        INC SI
+        MOV [SI], AH
+        
+    POPA
+ENDM ToAscii
