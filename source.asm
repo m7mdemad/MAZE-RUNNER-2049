@@ -5,6 +5,9 @@ include 'macros.inc'
         .STACK 64
         .DATA
           
+STATE				DB		 0  ; 0 => OPTIONS ,  1 => GET LEVEL , 2 => RULES 
+								; 3 => INTRO , 4 => GAMEPLAY 
+								; 5 => WIN , 6 => CHAT  
 RANDOM              DB       0  ; THE RANDOM NUBMBER RETURNED BY RANDOMIZE MACRO
 MAZES_N             DB       38 ; NUMBER OF MAZES AVAILABLE FOR EACH MODE
 MODE                DB       '1'; '1'->EASY  ,  '2'->HARD
@@ -137,49 +140,104 @@ MAIN    PROC FAR
         
 		   
 		   
-		                    
-		GETTING_STARTED:
-    		
+		    
     		GetName P1_NAME,NAME1_FILE
-    		Options
     		GetName P2_NAME,NAME2_FILE
     		SetInitials
-    		GetMode
-    		PrintRules
-            DrawIntro
-            SLEEP 20
-            DrawMaze
-            DrawScorebar
-            SetNames
-            FlushBuffer
+			
+			MAIN_LOOP:
+				Redirect
+
+				OPTIONS_SCREEN:
+					Options
+					JMP MAIN_LOOP
+				
+				MODE_SCREEN:
+					GetMode
+					MOV STATE, 2
+					JMP MAIN_LOOP
+				
+				RULES_SCREEN:
+					PrintRules
+					MOV STATE, 3
+					JMP MAIN_LOOP
+				
+				INTRO_SCREEN:
+					DrawIntro
+					MOV STATE, 4
+					DrawMaze
+					JMP MAIN_LOOP
+				
+				GAMEPLAY_SCREEN:
+					;DrawScorebar
+					;SetNames
+					
+					PrintPlayers
+					PrintBombs  
+					DetectAction
+
+					TestBombs 1,X1,Y1
+					TestBombs 2,X2,Y2
+
+					CheckBombs 
+
+					SetScore
+
+					Winner
+					Sleep 1
+					
+					JMP MAIN_LOOP
+
+					
+				WIN_SCREEN:
+					DrawWinScreen 
+					Sleep 50
+					JMP MAIN_LOOP
+					
+				CHAT_SCREEN:
+					JMP MAIN_LOOP
+
+
+			
+			
+			
+    		; Options
+			; GetMode
+    		; PrintRules
+            ; DrawIntro
+            ; SLEEP 20
+            ; DrawMaze
+            ; DrawScorebar
+            ; SetNames
+            ; FlushBuffer
             
-                  MAINLOOP:     
+                  ; MAINLOOP:     
             
-             CMP END_GAME,0
-             JNZ WIN_SCREEN
+             ; CMP END_GAME,0
+             ; JNZ WIN_SCREEN
                 
                 
-			PrintPlayers
-			PrintBombs  
-			DetectAction
+			; PrintPlayers
+			; PrintBombs  
+			; DetectAction
 			
-			TestBombs 1,X1,Y1
-			TestBombs 2,X2,Y2
+			; TestBombs 1,X1,Y1
+			; TestBombs 2,X2,Y2
 			
-			CheckBombs 
+			; CheckBombs 
 			   
-			SetScore
+			; SetScore
 			 
-			Winner
+			; Winner
 			
-			JMP MAINLOOP
+			; JMP MAINLOOP
 			
             
             
-        WIN_SCREEN:
+        ; WIN_SCREEN:
                  
-            DrawWinScreen 
-            SLEEP 50
+            ; DrawWinScreen 
+            ; SLEEP 50
             
         
        

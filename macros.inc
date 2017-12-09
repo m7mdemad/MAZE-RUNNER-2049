@@ -1,3 +1,33 @@
+Redirect MACRO
+								; 0 => OPTIONS ,  1 => GET LEVEL , 2 => RULES 
+								; 3 => INTRO , 4 => GAMEPLAY 
+								; 5 => WIN , 6 => CHAT 
+	CMP STATE, 0
+	JE OPTIONS_SCREEN
+	
+	CMP STATE, 1
+	JZ MODE_SCREEN
+	
+	CMP STATE, 2
+	JZ RULES_SCREEN
+	
+	CMP STATE, 3
+	JZ INTRO_SCREEN
+	
+	CMP STATE, 4
+	JZ GAMEPLAY_SCREEN
+	
+	CMP STATE, 5
+	JZ WIN_SCREEN
+	
+	CMP STATE, 6
+	JZ CHAT_SCREEN
+
+
+
+ENDM Redirect
+
+
 DrawMaze MACRO
     PUSHA    
 	
@@ -5,12 +35,6 @@ DrawMaze MACRO
 		LOCAL NEW_LINE
 		LOCAL INCREMENT
 		LOCAL CHECK
-		
-		;; generates a random number in random variable to indicate which maze will be drawn
-        Randomize RANDOM, MAZES_N 
-		
-		;; load the maze with the specific number index to the maze variable 
-        LoadMaze
 		
 		;; CLEAR THE SCREEN
 		ClearScreen
@@ -276,7 +300,7 @@ GetName MACRO P_NAME,NAME_FILE
  Options MACRO 
 	 PUSHA
 	
-	LOCAL AGAIN, EXIT, END_IT
+	LOCAL AGAIN, EXIT, END_IT, CHAT_OPTION, GAME_OPTION
 	
 	AGAIN:
 		;; CLEAR THE SCREEN
@@ -293,8 +317,12 @@ GetName MACRO P_NAME,NAME_FILE
         
 		 MOV AH,0
 		 INT 16H
+		 
+		 CMP AH,3BH
+		 JZ CHAT_OPTION
+		 
 		 CMP AH,3CH
-		 JZ END_IT
+		 JZ GAME_OPTION
 		 
 		 CMP AH, 01H
 		 JZ EXIT
@@ -304,6 +332,14 @@ GetName MACRO P_NAME,NAME_FILE
 	EXIT:
 		
 		TERMINATE
+		
+	CHAT_OPTION:
+		MOV STATE, 6
+		JMP END_IT
+		
+	GAME_OPTION:
+		MOV STATE, 1
+		JMP END_IT
 		
 	END_IT:
 		 
@@ -401,6 +437,10 @@ GetMode MACRO
 			;; SAVE THE CHAR TO THE MODE
 			MOV MODE, AL
 			
+			;; LOAD THE MAZE
+			LoadMaze
+			
+			
 			;; PRINT THE CHAR AGAIN
 			MOV AH, 2
 			MOV DL, AL
@@ -416,6 +456,9 @@ LoadMaze MACRO
 	
 		LOCAL ERROR
 		LOCAL CONTINUE
+		
+		;; generates a random number in random variable to indicate which maze will be drawn
+        Randomize RANDOM, MAZES_N 
   
         ;; DECIDE WHICH FILE TO OPEN (WHICH MAZE DIFFICULTY)
         CMP MODE, '1'    ;; CHECK IF THE MODE IS EASY
@@ -1975,10 +2018,11 @@ Winner MACRO
 		ANNOUNCE:
 			MOV END_GAME,1
             MOV WINNER_NO,AL
-			   		
+			MOV STATE, 5
                  		
 
 	END_IT:	
+		
 	
 	POPA
 ENDM Winner
