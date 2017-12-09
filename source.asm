@@ -184,7 +184,6 @@ MAIN    PROC FAR
 					SetScore
 
 					Winner
-					Sleep 1
 					
 					JMP MAIN_LOOP
 
