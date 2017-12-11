@@ -5,12 +5,12 @@ include 'macros.inc'
         .STACK 64
         .DATA
           
-STATE				DB		 0  ; 0 => OPTIONS ,  1 => GET LEVEL , 2 => RULES 
+STATE				DB		 0  ; 0 => OPTIONS , 1 => RULES ,  2 => GET LEVEL  
 								; 3 => INTRO , 4 => GAMEPLAY 
 								; 5 => WIN , 6 => CHAT  
 RANDOM              DB       0  ; THE RANDOM NUBMBER RETURNED BY RANDOMIZE MACRO
 MAZES_N             DB       38 ; NUMBER OF MAZES AVAILABLE FOR EACH MODE
-MODE                DB       '1'; '1'->EASY  ,  '2'->HARD
+MODE                DB       0	; '1'->EASY  ,  '2'->HARD
 ROWS                DW       81 ; NUMBER OF CHARS IN THE ROW
 COLS                DW       21 ; NUMBER OF CHARS IN THE COL
 INDEX               DW       ?  ; INDEX RETURNED BY GETINDEX MACRO          
@@ -153,17 +153,19 @@ MAIN    PROC FAR
 					JMP MAIN_LOOP
 				
 				MODE_SCREEN:
-					GetMode
+					PrintRules
 					MOV STATE, 2
 					JMP MAIN_LOOP
 				
 				RULES_SCREEN:
-					PrintRules
+					GetMode
 					MOV STATE, 3
 					JMP MAIN_LOOP
+
 				
 				INTRO_SCREEN:
 					DrawIntro
+					Sleep 20
 					MOV STATE, 4
 					DrawMaze
 					JMP MAIN_LOOP
@@ -175,13 +177,14 @@ MAIN    PROC FAR
 					PrintPlayers
 					PrintBombs  
 					DetectAction
+					
 
 					TestBombs 1,X1,Y1
 					TestBombs 2,X2,Y2
 
 					CheckBombs 
 
-					SetScore
+					;SetScore
 
 					Winner
 					
@@ -191,54 +194,10 @@ MAIN    PROC FAR
 				WIN_SCREEN:
 					DrawWinScreen 
 					Sleep 50
-					JMP MAIN_LOOP
+					Terminate
 					
 				CHAT_SCREEN:
 					JMP MAIN_LOOP
-
-
-			
-			
-			
-    		; Options
-			; GetMode
-    		; PrintRules
-            ; DrawIntro
-            ; SLEEP 20
-            ; DrawMaze
-            ; DrawScorebar
-            ; SetNames
-            ; FlushBuffer
-            
-                  ; MAINLOOP:     
-            
-             ; CMP END_GAME,0
-             ; JNZ WIN_SCREEN
-                
-                
-			; PrintPlayers
-			; PrintBombs  
-			; DetectAction
-			
-			; TestBombs 1,X1,Y1
-			; TestBombs 2,X2,Y2
-			
-			; CheckBombs 
-			   
-			; SetScore
-			 
-			; Winner
-			
-			; JMP MAINLOOP
-			
-            
-            
-        ; WIN_SCREEN:
-                 
-            ; DrawWinScreen 
-            ; SLEEP 50
-            
-        
        
 
 MAIN    ENDP
