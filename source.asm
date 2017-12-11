@@ -22,6 +22,7 @@ INTRO_FILE       	DB       "INTRO.txt",0
 INTRO       		DB       2100 DUP('$')
      
 OPTIONS_FILE      	DB       "OPTION.txt",0
+OPTIONS_SCR 		DB		 2100 DUP('$')
      
 MODES_FILE       	DB       "MODE.txt",0
 MODES       		DB       2100 DUP('$')
@@ -140,7 +141,7 @@ MAIN    PROC FAR
         
 		   
 		   
-		    
+		    LoadAllFiles
     		GetName P1_NAME,NAME1_FILE
     		GetName P2_NAME,NAME2_FILE
     		SetInitials
@@ -152,17 +153,17 @@ MAIN    PROC FAR
 					Options
 					JMP MAIN_LOOP
 				
-				MODE_SCREEN:
+				RULES_SCREEN:
 					PrintRules
 					MOV STATE, 2
 					JMP MAIN_LOOP
 				
-				RULES_SCREEN:
+				MODE_SCREEN:
 					GetMode
 					MOV STATE, 3
 					JMP MAIN_LOOP
 
-				
+
 				INTRO_SCREEN:
 					DrawIntro
 					Sleep 20
@@ -171,8 +172,8 @@ MAIN    PROC FAR
 					JMP MAIN_LOOP
 				
 				GAMEPLAY_SCREEN:
-					;DrawScorebar
-					;SetNames
+					DrawScorebar
+					SetNames
 					
 					PrintPlayers
 					PrintBombs  
@@ -184,7 +185,7 @@ MAIN    PROC FAR
 
 					CheckBombs 
 
-					;SetScore
+					SetScore
 
 					Winner
 					
