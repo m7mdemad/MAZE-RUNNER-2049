@@ -2157,15 +2157,15 @@ ENDM PrintName
 SetNames MACRO
 	PUSHA
 	
-		MoveCursor 0,23
+		MoveCursor 0,21
 		MOV XP,0
-		MOV YP,23
+		MOV YP,21
 		
 		PrintName P1_NAME
 		
-		MoveCursor 0,24
-		MOV XP,0
-		MOV YP,24		
+		MoveCursor 40,21
+		MOV XP,40
+		MOV YP,21		
 		
 		PrintName P2_NAME
 		
@@ -2182,7 +2182,7 @@ SetScore MACRO
 	
 	    MOV CL,X1
 		ToAscii CL
-		MoveCursor 11,23
+		MoveCursor 21,21
         
 		;; PRINT PLAYER1 SCORE (X1)
 		MOV AH,9
@@ -2191,7 +2191,7 @@ SetScore MACRO
 		
 		MOV CL,X2
 		ToAscii CL
-		MoveCursor 11,24
+		MoveCursor 61,21
         
 		;; PRINT PLAYER2 SCORE (X2)
 		MOV AH,9
