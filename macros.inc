@@ -2260,3 +2260,162 @@ InitializeVars MACRO
 	
 	POPA
 ENDM InitializeVars
+
+
+;; configures serial port connection
+ConfigureSerial MACRO
+    PUSHA
+        
+        ;; Set Divisor Latch Access Bit
+        mov dx,3fbh 			;; Line Control Register
+        mov al,10000000b		;; Set Divisor Latch Access Bit
+        out dx,al			;; Out it
+        ;; Set LSB byte of the Baud Rate Divisor Latch register.
+        mov dx,3f8h			
+        mov al,0ch			
+        out dx,al
+        ;; Set MSB byte of the Baud Rate Divisor Latch register.
+        mov dx,3f9h
+        mov al,00h
+        out dx,al
+        ;; Set port configuration
+        mov dx,3fbh
+        mov al,00011011b
+        out dx,al 
+    
+    POPA
+ENDM ConfigureSerial
+
+
+;; send a byte over serial
+Send MACRO LETTER
+    PUSHA
+
+        ;Check that Transmitter Holding Register is Empty
+		mov dx , 3FDH		; Line Status Register
+        AGAIN:  In al , dx 			;Read Line Status
+          		AND al , 00100000b
+          		JZ AGAIN			;; wait until receiver can receive
+	
+        ;If empty put the VALUE in Transmit data register
+  		mov dx , 3F8H		; Transmit data register
+  		mov  al,LETTER
+  		out dx , al 
+	 
+    POPA
+ENDM Send
+
+
+;; receive a byte over serial
+Receive MACRO STORAGE_ADDRESS
+    PUSHA 
+    
+    LOCAL CHK
+	
+        ;Check that Data Ready
+    	mov dx , 3FDH		; Line Status Register
+    	CHK:
+			in al , dx 
+			AND al , 1
+			JZ CHK
+
+        ;If Ready read the VALUE in Receive data register
+  		mov dx , 03F8H
+  		in al , dx 
+		MOV DI, STORAGE_ADDRESS
+  		mov [DI] , al
+
+    POPA
+ENDM Receive
+
+
+;; SEND PLAYER UPDATES AND MOVEMENTS ALONGSIDE WITH BOMBS
+SendPlayerData MACRO
+	PUSHA
+	
+		LOCAL SEND_X, SEND_Y, SEND_ACTIVE
+	
+		;; SEND FF TO INDICATE STARTING OF SENDING PLAYER UPDATES
+		Send 0FFH
+		
+		;; START BY UPDATING PLAYER LOCATION
+		SEND X1
+		SEND Y1
+		
+		;; THEN SEND BOMBS COUNT
+		SEND B_COUNT
+		
+		;; THEN SEND ALL X'S OF BOMBS
+		MOV CX, B_COUNT
+		LEA SI, BOMBX
+		
+		SEND_X:
+			SEND [SI]
+			INC SI
+			LOOP SEND_X
+			
+		;; THEN SEND ALL Y'S OF BOMBS
+		MOV CX, B_COUNT
+		LEA SI, BOMBY
+		
+		SEND_Y:
+			SEND [SI]
+			INC SI
+			LOOP SEND_Y
+			
+		;; THEN SEND ALL ACTIVE BOMBS DATA
+		MOV CX, B_COUNT
+		LEA SI, BOMB_ACTIVE
+		
+		SEND_ACTIVE:
+			SEND [SI]
+			INC SI
+			LOOP SEND_ACTIVE
+	
+	POPA
+ENDM SendPlayerData
+
+
+;; SEND PLAYER UPDATES AND MOVEMENTS ALONGSIDE WITH BOMBS
+ReceivePlayerData MACRO
+	PUSHA
+		
+		;; START BY RECEIVING PLAYER X, Y
+		LEA SI, X2
+		LEA DI, Y2
+		Receive SI
+		Receive DI
+		
+		;; THEN RECEIVE BOMBS COUNT
+		LEA SI, B_COUNT
+		Receive SI
+		
+		;; THEN RECEIVE ALL X'S OF BOMBS
+		MOV CX, B_COUNT
+		LEA SI, BOMBX
+		
+		RECEIVE_X:
+			Receive [SI]
+			INC SI
+			LOOP RECEIVE_X
+			
+		;; THEN RECEIVE ALL Y'S OF BOMBS
+		MOV CX, B_COUNT
+		LEA SI, BOMBY
+		
+		RECEIVE_Y:
+			Receive [SI]
+			INC SI
+			LOOP RECEIVE_Y
+			
+		;; THEN RECEIVE ALL ACTIVE BOMBS DATA
+		MOV CX, B_COUNT
+		LEA SI, BOMB_ACTIVE
+		
+		RECEIVE_ACTIVE:
+			Receive [SI]
+			INC SI
+			LOOP RECEIVE_ACTIVE
+		
+	POPA
+ENDM ReceivePlayerData
