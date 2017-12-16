@@ -1,13 +1,17 @@
-include 'macros.inc'
+include macros.inc
   
   
         .MODEL HUGE
         .STACK 64
         .DATA
           
-STATE				DB		 0  ; 0 => OPTIONS , 1 => RULES ,  2 => GET LEVEL  
+STATE				DB		 0  ; 0 => RULES , 1 => OPTIONS , 2 => GET LEVEL  
 								; 3 => INTRO , 4 => GAMEPLAY 
 								; 5 => WIN , 6 => CHAT  
+								
+INVITATION			DB		 0  ; 0 => NO INVITATION OR NO RESPONSE
+								; 1 => SENT A CHAT INVITATION
+								; 2 => SENT A GAME INVITATION
 RANDOM              DB       0  ; THE RANDOM NUBMBER RETURNED BY RANDOMIZE MACRO
 MAZES_N             DB       38 ; NUMBER OF MAZES AVAILABLE FOR EACH MODE
 MODE                DB       0	; '1'->EASY  ,  '2'->HARD
@@ -142,22 +146,23 @@ MAIN    PROC FAR
 		   
 		   
 		    LoadAllFiles
+			ConfigureSerial
     		GetName P1_NAME,NAME1_FILE
-    		GetName P2_NAME,NAME2_FILE
+			;ExchangeNames
     		SetInitials
 			
 			MAIN_LOOP:
 				Redirect
+				
+				RULES_SCREEN:
+					PrintRules
+					MOV STATE, 1
+					JMP MAIN_LOOP
 
 				OPTIONS_SCREEN:
 					Options
 					JMP MAIN_LOOP
-				
-				RULES_SCREEN:
-					PrintRules
-					MOV STATE, 2
-					JMP MAIN_LOOP
-				
+					
 				MODE_SCREEN:
 					GetMode
 					MOV STATE, 3
@@ -176,14 +181,14 @@ MAIN    PROC FAR
 					SetNames
 					
 					PrintPlayers
-					PrintBombs  
+					; PrintBombs  
 					DetectAction
 					
 
-					TestBombs 1,X1,Y1
-					TestBombs 2,X2,Y2
+					; TestBombs 1,X1,Y1
+					; TestBombs 2,X2,Y2
 
-					CheckBombs 
+					; CheckBombs 
 
 					SetScore
 
@@ -203,20 +208,3 @@ MAIN    PROC FAR
 
 MAIN    ENDP
         END MAIN 
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    

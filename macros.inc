@@ -23,34 +23,52 @@ LoadAllFiles MACRO
 ENDM LoadAllFiles
 
 Redirect MACRO
-								; 0 => OPTIONS , 1 => RULES ,  2 => GET LEVEL  
+								; 0 => RULES , 1 => OPTIONS ,  2 => GET LEVEL  
 								; 3 => INTRO , 4 => GAMEPLAY 
 								; 5 => WIN , 6 => CHAT 
-	LOCAL MODE_TEST, RULES_TEST, INTRO_TEST, GAMEPLAY_TEST, WIN_TEST, CHAT_TEST
+	LOCAL MODE_TEST, OPTIONS_TEST, INTRO_TEST, GAMEPLAY_TEST, WIN_TEST, CHAT_TEST
 	
 	CMP STATE, 0
-	JNZ RULES_TEST
-	JMP OPTIONS_SCREEN
+	; JNZ RULES_TEST
+	; JMP OPTIONS_SCREEN
+	JNZ OPTIONS_TEST
+	JMP RULES_SCREEN
 	
-
 	
-	RULES_TEST:	
+	
+	OPTIONS_TEST:	
 	
 		CMP STATE, 1
 		JNE MODE_TEST
-		CMP MODE, 0
-		JNZ MODE_NOT_ZERO
-		JZ RULES_SCREEN
-		MODE_NOT_ZERO:
-			MOV STATE, 3
-			JMP INTRO_TEST
+		; CMP MODE, 0
+		; JNZ MODE_NOT_ZERO
+		JZ OPTIONS_SCREEN
+		; MODE_NOT_ZERO:
+			; MOV STATE, 3
+			; JMP INTRO_TEST
+			
+	
+	; RULES_TEST:	
+	
+		; CMP STATE, 1
+		; JNE MODE_TEST
+		; CMP MODE, 0
+		; JNZ MODE_NOT_ZERO
+		; JZ RULES_SCREEN
+		; MODE_NOT_ZERO:
+			; MOV STATE, 3
+			; JMP INTRO_TEST
 			
 	MODE_TEST:
 		CMP STATE, 2
 		JNE INTRO_TEST
-		; CMP MODE, 0
-		; JNE INTRO_TEST
+		CMP MODE, 0
+		JNZ MODE_NOT_ZERO
 		JMP MODE_SCREEN
+		MODE_NOT_ZERO:
+			MOV STATE, 3
+			JMP INTRO_TEST
+			
 		
 	INTRO_TEST:
 		CMP STATE, 3
@@ -378,7 +396,7 @@ GetName MACRO P_NAME,NAME_FILE
 		JMP END_IT
 		
 	GAME_OPTION:
-		MOV STATE, 1
+		MOV STATE, 2
 		JMP END_IT
 		
 	END_IT:
@@ -1271,7 +1289,7 @@ HandleExit MACRO
 		JMP CONTINUE
 		
 		EXIT:
-			MOV STATE, 0
+			MOV STATE, 1
 		    ;TERMINATE
 			
 		CONTINUE:
@@ -2290,6 +2308,8 @@ ENDM ConfigureSerial
 ;; send a byte over serial
 Send MACRO LETTER
     PUSHA
+	
+		LOCAL AGAIN
 
         ;Check that Transmitter Holding Register is Empty
 		mov dx , 3FDH		; Line Status Register
@@ -2328,6 +2348,161 @@ Receive MACRO STORAGE_ADDRESS
     POPA
 ENDM Receive
 
+SendName MACRO
+	PUSHA
+		
+		LOCAL SEND_LETTER
+		
+		MOV SI, OFFSET P1_NAME
+		INC SI
+		Send [SI]
+		MOV CL, [SI]
+		MOV CH, 0
+		
+		SEND_LETTER:
+			INC SI
+			Send [SI]
+			LOOP SEND_LETTER
+		
+	
+	POPA
+ENDM SendName
+
+ReceiveName MACRO
+	PUSHA
+		
+		LOCAL RECEIVE_LETTER
+		
+		MOV DI, OFFSET P2_NAME
+		INC DI
+		Receive DI
+		MOV CL, [DI]
+		MOV CH, 0
+		
+		RECEIVE_LETTER:
+			INC DI
+			Receive DI
+			LOOP RECEIVE_LETTER
+	
+	POPA
+ENDM ReceiveName
+
+ExchangeNames MACRO
+	PUSHA
+		
+		LOCAL RECEIVE_NAME, SEND_NAME, NEXT, END_LOOP
+		
+		; LEA SI, P1_NAME
+		; INC SI
+		; LEA DI, P2_NAME
+		; INC DI
+		
+		;; HAVE AN INDICATOR WHETHER I SENT THE MY NAME OR NOT
+		MOV BL, 0
+
+		;; HAVE AN INDICATOR WHETHER I RECEIVED THE MY NAME OR NOT
+		MOV BH, 0
+		
+		;; CHECK IF THERE'S NO VALUE RECEIVED, IF SO RECEIVE THE NAME
+		;; THEN START SENDING MY NAME AFTER SETTING AH TO 1
+		
+		;Check that Data Ready
+    	mov dx , 3FDH		; Line Status Register
+			in al , dx 
+			AND al , 1
+			JNZ RECEIVE_NAME
+		
+		;; SEND MY NAME
+		SEND_NAME:
+			SendName
+			
+				mov dx , 3FDH		; Line Status Register
+				AGAIN:  In al , dx 			;Read Line Status
+						AND al , 00100000b
+						JZ AGAIN			;; wait until receiver can receive
+			
+			MOV BL, 1
+			
+			mov ah, 2
+			mov dl, 's'
+			int 21h
+			
+			JMP NEXT
+		
+		
+		RECEIVE_NAME:
+			mov dx , 3FDH		; Line Status Register
+			CHK:
+				in al , dx 
+				AND al , 1
+				JZ CHK
+			ReceiveName
+			
+			
+			MOV BH, 1
+			
+			mov ah, 2
+			mov dl, 'r'
+			int 21h
+			
+		NEXT:
+		
+		mov ah, 2
+		mov dl, '1'
+		int 21h
+		
+			;; if received and sent
+			CMP BH, BL
+			JZ END_LOOP
+			;; if sent only
+			CMP BL, 1
+			JZ RECEIVE_NAME
+			;; if received only
+			CMP BH, 1
+			JZ SEND_NAME
+			JMP NEXT
+			
+		END_LOOP:
+		
+			mov ah, 2
+			mov dl, 'e'
+			int 21h
+	
+	POPA
+ENDM ExchangeNames
+
+
+SendMaze MACRO
+	PUSHA
+		
+		LOCAL SEND_MAZE
+		
+		MOV SI, OFFSET MAZE
+		MOV CX, 2100	;; MAXIMUM NUMBER OF CHARS IN A MAZE
+		
+		SEND_MAZE:
+			Send [SI]
+			INC SI
+			LOOP SEND_MAZE
+	
+	POPA
+ENDM SendMaze
+
+ReceiveMaze MACRO
+	PUSHA
+		
+		LOCAL RECEIVE_MAZE
+		
+		MOV DI, OFFSET MAZE
+		MOV CX, 2100	;; MAXIMUM NUMBER OF CHARS IN A MAZE
+		
+		RECEIVE_MAZE:
+			Receive DI
+			INC DI
+			LOOP RECEIVE_MAZE
+	
+	POPA
+ENDM ReceiveMaze
 
 ;; SEND PLAYER UPDATES AND MOVEMENTS ALONGSIDE WITH BOMBS
 SendPlayerData MACRO
