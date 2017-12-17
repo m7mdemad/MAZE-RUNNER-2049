@@ -9,12 +9,17 @@ STATE				DB		 0  ; 0 => RULES , 1 => OPTIONS , 2 => GET LEVEL
 								; 3 => INTRO , 4 => GAMEPLAY 
 								; 5 => WIN , 6 => CHAT  
 								
-INVITATION			DB		 0  ; 0 => NO INVITATION OR NO RESPONSE
+SENT_INVITATION		DB		 0  ; 0 => NO INVITATION OR NO RESPONSE
 								; 1 => SENT A CHAT INVITATION
 								; 2 => SENT A GAME INVITATION
+RECEIVED_INVITATION	DB		 0  
+
+MATCHED				DB		 0 	; 1 => GOT MATCHED WITH THE SECOND PLAYER
+GOT_INVITED			DB		 0
+
 RANDOM              DB       0  ; THE RANDOM NUBMBER RETURNED BY RANDOMIZE MACRO
 MAZES_N             DB       38 ; NUMBER OF MAZES AVAILABLE FOR EACH MODE
-MODE                DB       0	; '1'->EASY  ,  '2'->HARD
+MODE                DB       0	; '1'->EASY  ,  '2'->HARD , '3'->DETERMINED BY PLAYER2
 ROWS                DW       81 ; NUMBER OF CHARS IN THE ROW
 COLS                DW       21 ; NUMBER OF CHARS IN THE COL
 INDEX               DW       ?  ; INDEX RETURNED BY GETINDEX MACRO          
@@ -157,10 +162,13 @@ MAIN    PROC FAR
 				RULES_SCREEN:
 					PrintRules
 					MOV STATE, 1
+					ClearScreen
 					JMP MAIN_LOOP
 
 				OPTIONS_SCREEN:
 					Options
+					SendInvitation
+					ReceiveInvitation
 					JMP MAIN_LOOP
 					
 				MODE_SCREEN:

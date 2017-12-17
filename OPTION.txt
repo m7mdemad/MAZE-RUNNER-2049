@@ -5,13 +5,11 @@
 
 
 
-                        *To start chatting press F1
+                        * To start chatting press F1
 
-                        *To start Maze game press F2
+                        * To start Maze game press F2
 
-                        *To end the program press ESC
-
-
+                        * To end the program press ESC
 
 
 
@@ -22,8 +20,5 @@
 
 
 
-
-
-
-------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 Notfication bar
