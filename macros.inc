@@ -380,6 +380,7 @@ GetName MACRO P_NAME,NAME_FILE
 		AGAIN:
 			;; CLEAR THE SCREEN
 			 ; ClearScreen
+			 RemoveCursor
 			 ;; MOVE THE CURSOR TO THE START OF THE SCREEN
 			 MoveCursor 0,0
 
@@ -489,6 +490,8 @@ GetMode MACRO
 		AGAIN:
 			;; CLEAR THE SCREEN
 			ClearScreen
+			;; reset the cursor to be visible again
+			ResetCursor
 			;; MOVE THE CURSOR TO THE START OF THE SCREEN
 			MoveCursor 0,0
 			
@@ -1064,6 +1067,17 @@ RemoveCursor MACRO
 	POPA
 
 ENDM RemoveCursor
+
+ResetCursor MACRO
+	PUSHA
+
+		MOV AH, 01H
+		MOV CX, 0607H
+		INT 10H
+		
+	POPA
+
+ENDM ResetCursor
 
 
 FlushBuffer MACRO
