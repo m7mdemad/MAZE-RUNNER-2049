@@ -61,6 +61,9 @@ Y1                  DB       1
 X2                  DB       0 ; PLAYER 2 POSITION
 Y2                  DB       1 
 
+OLD_X2				DB		 0
+OLD_Y2				DB		 1 
+
 P1_CHAR             DB       1
 P2_CHAR             DB       2
 BOMB_CHAR           DB       15
@@ -192,6 +195,8 @@ MAIN    PROC FAR
 					PrintPlayers
 					; PrintBombs  
 					DetectAction
+					
+					ExchangePlayerData	
 					
 
 					; TestBombs 1,X1,Y1
