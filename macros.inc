@@ -725,12 +725,6 @@ HandlePlayerMovement MACRO
 		LOCAL MOVE_LEFT1
 		LOCAL MOVE_DOWN1
 		
-		LOCAL MOVE_UP2
-		LOCAL MOVE_RIGHT2
-		LOCAL MOVE_LEFT2
-		LOCAL MOVE_DOWN2
-		
-		
 		LOCAL CONTINUE
 		
 		;; CHECK IF A KEY WAS PRESSED
@@ -751,18 +745,6 @@ HandlePlayerMovement MACRO
 		
 		CMP AH, RIGHT_ARROW
 		JZ MOVE_RIGHT1
-		
-		CMP AH, W_LETTER
-		JZ MOVE_UP2
-		
-		CMP AH, A_LETTER
-		JZ MOVE_LEFT2
-		
-		CMP AH, S_LETTER
-		JZ MOVE_DOWN2
-		
-		CMP AH, D_LETTER
-		JZ MOVE_RIGHT2
 		
 		;; if not caught until here, ignore it because it's a bad key
 		JMP CONTINUE
@@ -791,31 +773,6 @@ HandlePlayerMovement MACRO
 			ClearPosition X1, Y1
 			MoveRight X1, Y1
 			JMP CONTINUE
-
-		MOVE_UP2:
-		    MOD_P2_POSTPONE
-			ClearPosition X2, Y2
-			MoveUp X2, Y2
-			JMP CONTINUE
-
-		MOVE_LEFT2:
-			MOD_P2_POSTPONE
-			ClearPosition X2, Y2
-			MoveLeft X2, Y2
-			JMP CONTINUE
-
-		MOVE_DOWN2:
-		    MOD_P2_POSTPONE
-			ClearPosition X2, Y2
-			MoveDown X2, Y2
-			JMP CONTINUE
-			
-		MOVE_RIGHT2:
-		    MOD_P2_POSTPONE
-			ClearPosition X2, Y2
-			MoveRight X2, Y2
-			JMP CONTINUE
-
     
 		CONTINUE:
 		
@@ -1204,9 +1161,9 @@ DetectAction MACRO
 		JZ CONTINUE	;; if no, skip
 		        
 
-		HandlePlayerFire
+		;;HandlePlayerFire
 		HandlePlayerMovement
-		HandleExit
+		;;HandleExit
 		FlushBuffer
 		
 		

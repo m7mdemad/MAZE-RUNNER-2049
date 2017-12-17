@@ -42,8 +42,7 @@ RULES				DB		 2100 DUP('$')
 SCORE_FILE          DB       "SCORE.txt",0
 SCOREBAR            DB       2100 DUP('$')
 
-NAME1_FILE			DB		 "P1_NAME.txt",0
-NAME2_FILE			DB		 "P2_NAME.txt",0
+NAME_FILE			DB		 "P_NAME.txt",0
 NAMES				DB		 2100 DUP('$')
 
 P1_NAME				DB		 20, ?, 21 DUP('$') ; STORE THE NAME OF PLAYER1
@@ -77,7 +76,6 @@ BOMB_ACTIVE         DB       50 DUP(3)  ; 0-> ACTIVE, 1-> PLAYER1 PLANTED IT BUT
 B_COUNT             DW       1 
 
 P1_POSTPONE         DB       0 ; FREEZE PLAYER ONE FOR P1_POSPONE MOVES
-P2_POSTPONE         DB       0 ; FREEZE PLAYER TWO FOR P2_POSPONE MOVES
         
 MOTION_DELAY        DB       20
 FIRE_DELAY          DB       15
@@ -90,7 +88,6 @@ RAND_2_LNS          DB      4
      
 
 HOLD_FIRE_1         DB      0 ; HOLD THE FIRE OF PLAYER1 FOR HOLD_FIRE_1 MOVES
-HOLD_FIRE_2         DB      0 ; HOLD THE FIRE OF PLAYER2 FOR HOLD_FIRE_2 MOVES
         
                              
 XP                  DB      ?
@@ -110,27 +107,12 @@ DOWN_ARROW	     	DB		50H
 RIGHT_ARROW		    DB		4DH
 LEFT_ARROW		    DB		4BH
                          
-
-
-W_LETTER    		DB		11H
-A_LETTER    		DB		1EH
-S_LETTER		    DB		1FH
-D_LETTER		    DB		20H  
-                       
                        
 ; NEVER CHANGE
 UP_ARROW_PER		EQU   	48H
 DOWN_ARROW_PER		EQU		50H
 RIGHT_ARROW_PER		EQU		4DH
 LEFT_ARROW_PER		EQU		4BH
-
-
-
-W_LETTER_PER		EQU		11H
-A_LETTER_PER		EQU		1EH
-S_LETTER_PER		EQU		1FH
-D_LETTER_PER		EQU		20H  
-
 
 
 F_LETTER		    EQU		21H
@@ -155,7 +137,7 @@ MAIN    PROC FAR
 		   
 		    LoadAllFiles
 			ConfigureSerial
-    		GetName P1_NAME,NAME1_FILE
+    		GetName P1_NAME,NAME_FILE
 			;ExchangeNames
     		SetInitials
 			
