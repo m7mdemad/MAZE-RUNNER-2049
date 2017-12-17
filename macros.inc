@@ -2729,3 +2729,112 @@ ReceiveInvitation MACRO
 	
 	POPA
 ENDM ReceiveInvitation
+
+ 
+PrintStr MACRO STRING, X, Y
+    PUSHA
+        
+            
+    LOCAL PRINT_STR, PRINT_CHAR, NEXT, END_IT
+	
+		LEA SI,STRING
+		MOV CX, 100
+		               
+		MOV DL,0
+		MOV DH,Y
+		
+		MOV AH,2H
+        MOV BH,0
+        INT 10H 
+		
+		PRINT_STR:
+			CMP [SI],'$'  
+			
+			JZ END_IT
+			
+			
+		PRINT_CHAR:
+		    CMP [SI],1CH
+			JZ NEXT
+			
+		    MOV AH,2
+		    MOV DL,[SI]
+		    INT 21H
+		    INC X
+		    
+			JMP NEXT
+			
+		NEXT:
+			INC SI
+			LOOP PRINT_STR 
+			
+		END_IT:
+			
+        
+    POPA
+ENDM PrintStr     
+     
+ 
+
+NotificationBar MACRO
+	PUSHA
+		
+		LOCAL SENT_CHAT, SENT_GAME, REC_CHAT, REC_GAME, END_IT, CONTINUE
+		MOV XP, 0
+		MOV YP, 23
+		ClearLine YP
+		CMP SENT_INVITATION, 1
+		JE SENT_CHAT
+		CMP RECEIVED_INVITATION, 1
+		JE REC_CHAT
+		JMP CONTINUE
+		
+		SENT_CHAT:
+			PrintStr SENT_CHAT_MESSAGE, XP, YP
+			JMP CONTINUE
+		
+		REC_CHAT:
+			PrintStr REC_CHAT_MESSAGE, XP, YP
+		
+		
+		CONTINUE:
+			MOV XP, 0
+			MOV YP, 24
+			ClearLine YP
+			CMP SENT_INVITATION, 2
+			JE SENT_GAME
+			CMP RECEIVED_INVITATION, 2
+			JE REC_GAME
+			JMP END_IT
+
+			
+		SENT_GAME:
+			PrintStr SENT_GAME_MESSAGE, XP, YP
+			JMP END_IT
+		
+		REC_GAME:
+			PrintStr REC_GAME_MESSAGE, XP, YP
+		
+		
+		END_IT:
+	
+	POPA
+ENDM NotificationBar
+
+ClearLine MACRO Y
+	PUSHA
+	
+		; LOCAL CLEAR
+		; MOV AL, Y
+		MoveCursor 0, Y 
+		
+			mov ah,9 ;Display
+			mov bh,0 ;Page 0
+			mov al,' ' ;Letter D
+			mov cx,80 ;5 times
+			mov bl,0Fh ;Green (A) on white(F) background
+			int 10h
+		
+	
+	POPA
+ENDM ClearLine

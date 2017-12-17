@@ -17,6 +17,11 @@ RECEIVED_INVITATION	DB		 0
 MATCHED				DB		 0 	; 1 => GOT MATCHED WITH THE SECOND PLAYER
 GOT_INVITED			DB		 0
 
+SENT_CHAT_MESSAGE	DB		 "You have sent a chat invitation to ","$"
+SENT_GAME_MESSAGE	DB		 "You have sent a game invitation to ","$"
+REC_CHAT_MESSAGE	DB		 " has sent you a chat invitation. Press F1 to accept.","$"
+REC_GAME_MESSAGE	DB		 " has sent you a game invitation. Press F2 to accept.","$"
+
 RANDOM              DB       0  ; THE RANDOM NUBMBER RETURNED BY RANDOMIZE MACRO
 MAZES_N             DB       38 ; NUMBER OF MAZES AVAILABLE FOR EACH MODE
 MODE                DB       0	; '1'->EASY  ,  '2'->HARD , '3'->DETERMINED BY PLAYER2
@@ -152,6 +157,7 @@ MAIN    PROC FAR
 
 				OPTIONS_SCREEN:
 					Options
+					NotificationBar
 					SendInvitation
 					ReceiveInvitation
 					JMP MAIN_LOOP
