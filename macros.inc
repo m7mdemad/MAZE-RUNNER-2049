@@ -2528,6 +2528,25 @@ ReceiveMaze MACRO
 	POPA
 ENDM ReceiveMaze
 
+ExchangeMazes MACRO
+	PUSHA
+	
+		LOCAL END_IT, RECEIVE_MAZE
+		
+		CMP GOT_INVITED, 0
+		JNE RECEIVE_MAZE
+		
+		SendMaze
+		JMP END_IT
+		
+		RECEIVE_MAZE:
+			ReceiveMaze
+		
+		END_IT:
+	
+	POPA
+ENDM ExchangeMazes
+
 ;; SEND PLAYER UPDATES AND MOVEMENTS ALONGSIDE WITH BOMBS
 SendPlayerData MACRO
 	PUSHA

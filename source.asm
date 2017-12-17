@@ -181,6 +181,7 @@ MAIN    PROC FAR
 					DrawIntro
 					Sleep 20
 					MOV STATE, 4
+					ExchangeMazes
 					DrawMaze
 					JMP MAIN_LOOP
 				
