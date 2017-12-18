@@ -56,6 +56,7 @@ P2_NAME				DB		 20, ?, 21 DUP('$') ; STORE THE NAME OF PLAYER2
              
 WINNER_NO           DB       ? 
 WINNER_FILE			DB		 "WIN.txt",0
+LOSER_FILE			DB		 "LOSE.txt",0
 WIN 				DB		 2100 DUP('$')    
 
 

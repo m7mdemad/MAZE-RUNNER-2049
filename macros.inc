@@ -17,7 +17,7 @@ LoadAllFiles MACRO
 		LoadFile SCORE_FILE,SCOREBAR
 		
 		;; PRINT THE CUP 
-	    LoadFile WINNER_FILE, WIN
+	    ; LoadFile WINNER_FILE, WIN
 		
 	POPA
 ENDM LoadAllFiles
@@ -2099,7 +2099,18 @@ ENDM Winner
 DrawWinScreen MACRO
 	PUSHA
 	
-	LOCAL END_IT
+	LOCAL END_IT, LOAD_1, CONTINUE
+		
+		CMP WINNER_NO, 1
+		JZ LOAD_1
+		
+		LoadFile LOSER_FILE, WIN
+		JMP CONTINUE
+		
+		LOAD_1:
+			LoadFile WINNER_FILE, WIN
+		
+		CONTINUE:
 		
 		ClearScreen
 		
@@ -2112,18 +2123,7 @@ DrawWinScreen MACRO
 		MOV XP,33
 		MOV YP,20
 		
-		CMP WINNER_NO,2
-		JE PRINT_P2
-		
-		;; ANNOUNCE PLAYER1 THE WINNER
 		PrintName P1_NAME
-		JMP END_IT
-		
-		;; ANNOUNCE PLAYER2 THE WINNER
-		PRINT_P2:
-			PrintName P2_NAME
-		   
-		END_IT:
 	
 	POPA
 ENDM DrawWinScreen 
@@ -2379,6 +2379,7 @@ ReceiveName MACRO
 		
 		MOV DI, OFFSET P2_NAME
 		INC DI
+		Receive DI
 		Receive DI
 		MOV CL, [DI]
 		MOV CH, 0
@@ -2680,6 +2681,7 @@ SendInvitation MACRO
 		;; sends an invitation to the other player with the name in it
 		;SendName
 		Send SENT_INVITATION
+		;SendName
 	
 	POPA
 ENDM SendInvitation
@@ -2711,6 +2713,7 @@ ReceiveInvitation MACRO
 			MOV DL, RECEIVED_INVITATION
 			MOV SI, OFFSET RECEIVED_INVITATION
 			Receive SI
+			;ReceiveName
 			CMP RECEIVED_INVITATION, 0
 			JNE COMPARE_INV
 			MOV RECEIVED_INVITATION, DL
