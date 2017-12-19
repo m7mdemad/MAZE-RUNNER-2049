@@ -19,8 +19,9 @@ GOT_INVITED			DB		 0
 
 SENT_CHAT_MESSAGE	DB		 "You have sent a chat invitation to ","$"
 SENT_GAME_MESSAGE	DB		 "You have sent a game invitation to ","$"
-REC_CHAT_MESSAGE	DB		 " has sent you a chat invitation. Press F1 to accept.","$"
-REC_GAME_MESSAGE	DB		 " has sent you a game invitation. Press F2 to accept.","$"
+REC_CHAT_MESSAGE	DB		 "you have received a chat invitation. Press F1 to accept it from ","$"
+REC_GAME_MESSAGE	DB		 "you have received a game invitation. Press F2 to accept it from ","$"
+WAITING				DB		 "WAITING FOR THE SECOND PLAYER TO CONNECT..","$"
 
 RANDOM              DB       0  ; THE RANDOM NUBMBER RETURNED BY RANDOMIZE MACRO
 MAZES_N             DB       38 ; NUMBER OF MAZES AVAILABLE FOR EACH MODE
@@ -50,15 +51,14 @@ SCOREBAR            DB       2100 DUP('$')
 NAME_FILE			DB		 "P_NAME.txt",0
 NAMES				DB		 2100 DUP('$')
 
-P1_NAME				DB		 20, ?, 21 DUP('$') ; STORE THE NAME OF PLAYER1
-P2_NAME				DB		 20, ?, 21 DUP('$') ; STORE THE NAME OF PLAYER2
+P1_NAME				DB		 20, ?, 21 DUP('$');"$$$$$$$$$$$$$$$$$";20, ?, 21 DUP('$') ; STORE THE NAME OF PLAYER1
+P2_NAME				DB		 20, ?, 21 DUP('$');"$$$$$$$$$$$$$$$$$";20, ?, 21 DUP('$') ; STORE THE NAME OF PLAYER2
 
              
 WINNER_NO           DB       ? 
 WINNER_FILE			DB		 "WIN.txt",0
 LOSER_FILE			DB		 "LOSE.txt",0
 WIN 				DB		 2100 DUP('$')    
-
 
 X1                  DB       0 ; PLAYER 1 POSITION
 Y1                  DB       1
@@ -144,8 +144,6 @@ MAIN    PROC FAR
 		    LoadAllFiles
 			ConfigureSerial
     		GetName P1_NAME,NAME_FILE
-			;ExchangeNames
-    		SetInitials
 			
 			MAIN_LOOP:
 				Redirect
@@ -154,13 +152,15 @@ MAIN    PROC FAR
 					PrintRules
 					MOV STATE, 1
 					ClearScreen
+					PrintWaiting
 					JMP MAIN_LOOP
 
 				OPTIONS_SCREEN:
 					Options
-					NotificationBar
+					ExchangeNames
 					SendInvitation
 					ReceiveInvitation
+					NotificationBar
 					JMP MAIN_LOOP
 					
 				MODE_SCREEN:
@@ -170,6 +170,7 @@ MAIN    PROC FAR
 
 
 				INTRO_SCREEN:
+					SetInitials
 					DrawIntro
 					Sleep 20
 					MOV STATE, 4

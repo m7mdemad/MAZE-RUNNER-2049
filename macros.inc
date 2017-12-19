@@ -2352,128 +2352,18 @@ Receive MACRO STORAGE_ADDRESS
     POPA
 ENDM Receive
 
-SendName MACRO
-	PUSHA
-		
-		LOCAL SEND_LETTER
-		
-		MOV SI, OFFSET P1_NAME
-		INC SI
-		Send [SI]
-		MOV CL, [SI]
-		MOV CH, 0
-		
-		SEND_LETTER:
-			INC SI
-			Send [SI]
-			LOOP SEND_LETTER
-		
-	
-	POPA
-ENDM SendName
-
-ReceiveName MACRO
-	PUSHA
-		
-		LOCAL RECEIVE_LETTER
-		
-		MOV DI, OFFSET P2_NAME
-		INC DI
-		Receive DI
-		Receive DI
-		MOV CL, [DI]
-		MOV CH, 0
-		
-		RECEIVE_LETTER:
-			INC DI
-			Receive DI
-			LOOP RECEIVE_LETTER
-	
-	POPA
-ENDM ReceiveName
 
 ExchangeNames MACRO
-	PUSHA
-		
-		LOCAL RECEIVE_NAME, SEND_NAME, NEXT, END_LOOP
-		
-		; LEA SI, P1_NAME
-		; INC SI
-		; LEA DI, P2_NAME
-		; INC DI
-		
-		;; HAVE AN INDICATOR WHETHER I SENT THE MY NAME OR NOT
-		MOV BL, 0
-
-		;; HAVE AN INDICATOR WHETHER I RECEIVED THE MY NAME OR NOT
-		MOV BH, 0
-		
-		;; CHECK IF THERE'S NO VALUE RECEIVED, IF SO RECEIVE THE NAME
-		;; THEN START SENDING MY NAME AFTER SETTING AH TO 1
-		
-		;Check that Data Ready
-    	mov dx , 3FDH		; Line Status Register
-			in al , dx 
-			AND al , 1
-			JNZ RECEIVE_NAME
-		
-		;; SEND MY NAME
-		SEND_NAME:
-			SendName
-			
-				mov dx , 3FDH		; Line Status Register
-				AGAIN:  In al , dx 			;Read Line Status
-						AND al , 00100000b
-						JZ AGAIN			;; wait until receiver can receive
-			
-			MOV BL, 1
-			
-			mov ah, 2
-			mov dl, 's'
-			int 21h
-			
-			JMP NEXT
-		
-		
-		RECEIVE_NAME:
-			mov dx , 3FDH		; Line Status Register
-			CHK:
-				in al , dx 
-				AND al , 1
-				JZ CHK
-			ReceiveName
-			
-			
-			MOV BH, 1
-			
-			mov ah, 2
-			mov dl, 'r'
-			int 21h
-			
-		NEXT:
-		
-		mov ah, 2
-		mov dl, '1'
-		int 21h
-		
-			;; if received and sent
-			CMP BH, BL
-			JZ END_LOOP
-			;; if sent only
-			CMP BL, 1
-			JZ RECEIVE_NAME
-			;; if received only
-			CMP BH, 1
-			JZ SEND_NAME
-			JMP NEXT
-			
-		END_LOOP:
-		
-			mov ah, 2
-			mov dl, 'e'
-			int 21h
-	
-	POPA
+	LOCAL START_AGAIN
+	mov bx,0
+	START_AGAIN:
+		Send P1_NAME[BX]
+		LEA DI, P2_NAME[BX]
+		Receive DI  
+		INC BX
+		CMP BX,23
+		JNE START_AGAIN
+               
 ENDM ExchangeNames
 
 
@@ -2674,6 +2564,14 @@ ExchangePlayerData MACRO
 	POPA
 ENDM ExchangePlayerData
 
+PrintWaiting MACRO
+	PUSHA
+		MOV XP, 0
+		MOV YP, 23
+		PrintStr WAITING, XP , YP
+	
+	POPA
+ENDM PrintWaiting
 
 SendInvitation MACRO
 	PUSHA
@@ -2681,6 +2579,7 @@ SendInvitation MACRO
 		;; sends an invitation to the other player with the name in it
 		;SendName
 		Send SENT_INVITATION
+		; ReceiveName
 		;SendName
 	
 	POPA
@@ -2713,6 +2612,7 @@ ReceiveInvitation MACRO
 			MOV DL, RECEIVED_INVITATION
 			MOV SI, OFFSET RECEIVED_INVITATION
 			Receive SI
+			; SendName
 			;ReceiveName
 			CMP RECEIVED_INVITATION, 0
 			JNE COMPARE_INV
@@ -2793,11 +2693,27 @@ NotificationBar MACRO
 		JMP CONTINUE
 		
 		SENT_CHAT:
+			; MoveCursor XP, YP
+			; MOV AH,9H
+			; MOV DX,OFFSET SENT_CHAT_MESSAGE
+			; INT 21H  
+
 			PrintStr SENT_CHAT_MESSAGE, XP, YP
+			MOV AH,9H
+			MOV DX,OFFSET P2_NAME[2]
+			INT 21H  
 			JMP CONTINUE
 		
 		REC_CHAT:
+			; MoveCursor XP, YP
+			; MOV AH,9H
+			; MOV DX,OFFSET P2_NAME[2]
+			; INT 21H  
+
 			PrintStr REC_CHAT_MESSAGE, XP, YP
+			MOV AH,9H
+			MOV DX,OFFSET P2_NAME[2]
+			INT 21H  
 		
 		
 		CONTINUE:
@@ -2812,11 +2728,25 @@ NotificationBar MACRO
 
 			
 		SENT_GAME:
+			; MoveCursor XP, YP
+			; MOV AH,9H
+			; MOV DX,OFFSET SENT_GAME_MESSAGE
+			; INT 21H  
 			PrintStr SENT_GAME_MESSAGE, XP, YP
+			MOV AH,9H
+			MOV DX,OFFSET P2_NAME[2]
+			INT 21H  
 			JMP END_IT
 		
 		REC_GAME:
+			; MoveCursor XP, YP
+			; MOV AH,9H
+			; MOV DX,OFFSET P2_NAME[2]
+			; INT 21H 
 			PrintStr REC_GAME_MESSAGE, XP, YP
+			MOV AH,9H
+			MOV DX,OFFSET P2_NAME[2]
+			INT 21H  
 		
 		
 		END_IT:
