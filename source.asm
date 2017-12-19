@@ -211,7 +211,7 @@ MAIN    PROC FAR
 				GAMEPLAY_SCREEN:
 					DrawScorebar
 					SetNames
-					
+
 					PrintPlayers
 					PrintBombs  
 					DetectAction
@@ -225,8 +225,6 @@ MAIN    PROC FAR
 					 CheckBombs 
 
 					SetScore
-
-					Winner
 					
 					JMP MAIN_LOOP
 
@@ -237,7 +235,7 @@ MAIN    PROC FAR
 					Terminate
 					
 				CHAT_SCREEN:
-				    Chat_Macro
+				    ChatMacro
 					JMP MAIN_LOOP
        
 

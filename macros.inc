@@ -2203,6 +2203,7 @@ Winner MACRO
 			MOV END_GAME,1
             MOV WINNER_NO,AL
 			MOV STATE, 5
+			JMP MAIN_LOOP
                  		
 
 	END_IT:	
@@ -2677,7 +2678,8 @@ ExchangePlayerData MACRO
 		JNE RECEIVE_FIRST
 		
 		; else, send first
-		SendPlayerData
+		SendPlayerData		
+		Winner
 		ReceivePlayerData
 		
 		JMP END_IT
@@ -2685,6 +2687,8 @@ ExchangePlayerData MACRO
 		RECEIVE_FIRST:
 			ReceivePlayerData
 			SendPlayerData
+			
+					Winner
 		
 		END_IT:
 	
@@ -3240,7 +3244,7 @@ POPA
 ENDM Scroll
 
 
-Chat_Macro MACRO
+ChatMacro MACRO
 	PUSHA
 		LOCAL MAINLOOP, SEND_LETTER, RECEIVE_LETTER,END_IT
 		SplitScreen
@@ -3276,4 +3280,4 @@ Chat_Macro MACRO
 
 	
 	POPA
-ENDM
+ENDM ChatMacro
