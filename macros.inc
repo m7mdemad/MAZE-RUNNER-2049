@@ -2184,11 +2184,8 @@ ENDM RandInvert
 ;; CHECK IF THERE IS A WINNER OR NOT YET
 Winner MACRO 
 	PUSHA
-	
-	LOCAL P1_WIN
-	LOCAL P2_WIN
-	LOCAL ANNOUNCE
-	LOCAL END_IT
+	LOCAL P1_WIN,P2_WIN,ANNOUNCE,END_IT
+		
 		;; SEE IF PLAYER ONE REACH THE END
 		CMP X1,78
 		JZ P1_WIN
@@ -2500,8 +2497,7 @@ ENDM ExchangeNames
 
 SendMaze MACRO
 	PUSHA
-		
-		LOCAL SEND_MAZE
+	LOCAL SEND_MAZE
 		
 		MOV SI, OFFSET MAZE
 		MOV CX, 2100	;; MAXIMUM NUMBER OF CHARS IN A MAZE
@@ -2516,8 +2512,7 @@ ENDM SendMaze
 
 ReceiveMaze MACRO
 	PUSHA
-		
-		LOCAL RECEIVE_MAZE
+	LOCAL RECEIVE_MAZE
 		
 		MOV DI, OFFSET MAZE
 		MOV CX, 2100	;; MAXIMUM NUMBER OF CHARS IN A MAZE
@@ -2532,8 +2527,7 @@ ENDM ReceiveMaze
 
 ExchangeMazes MACRO
 	PUSHA
-	
-		LOCAL END_IT, RECEIVE_MAZE
+	LOCAL END_IT, RECEIVE_MAZE
 		
 		CMP GOT_INVITED, 0
 		JNE RECEIVE_MAZE
@@ -2549,26 +2543,12 @@ ExchangeMazes MACRO
 	POPA
 ENDM ExchangeMazes
 
+
 ;; SEND PLAYER UPDATES AND MOVEMENTS ALONGSIDE WITH BOMBS
 SendPlayerData MACRO
 	PUSHA
 	
-		LOCAL SEND_X, SEND_Y, SEND_ACTIVE
-	
-		;; SEND FF TO INDICATE STARTING OF SENDING PLAYER UPDATES
-		; Send 0FFH
-		
 		;; START BY UPDATING PLAYER LOCATION
-		
-		; LEA SI, X1
-		; LEA DI, Y1
-		; SEND X1
-		; VERIFY SENDING BY RECEIVING IT
-		; Receive SI
-		
-		; SEND Y1
-		; VERIFY SENDING BY RECEIVING IT
-		; Receive DI
 		
 		SEND LOCAL_KEY
 		LEA SI, LOCAL_KEY
@@ -2576,37 +2556,6 @@ SendPlayerData MACRO
 		MOV LOCAL_KEY, 0
 		
 		
-		; THEN SEND BOMBS COUNT
-		; MOV AX, B_COUNT
-		; SEND AL
-		
-		; THEN SEND ALL X'S OF BOMBS
-		; MOV CX, B_COUNT
-		; LEA SI, BOMBX
-		
-		; SEND_X:
-			; SEND [SI]
-			; INC SI
-			; LOOP SEND_X
-			
-		; THEN SEND ALL Y'S OF BOMBS
-		; MOV CX, B_COUNT
-		; LEA SI, BOMBY
-		
-		; SEND_Y:
-			; SEND [SI]
-			; INC SI
-			; LOOP SEND_Y
-			
-		; THEN SEND ALL ACTIVE BOMBS DATA
-		; MOV CX, B_COUNT
-		; LEA SI, BOMB_ACTIVE
-		
-		; SEND_ACTIVE:
-			; SEND [SI]
-			; INC SI
-			; LOOP SEND_ACTIVE
-	
 	POPA
 ENDM SendPlayerData
 
@@ -2618,66 +2567,10 @@ ReceivePlayerData MACRO
 		LEA DI, REMOTE_KEY
 		RECEIVE DI
 		SEND REMOTE_KEY
-		; LOCAL CONTINUE
-		
-		; START BY RECEIVING PLAYER X, Y
-		; LEA SI, X2
-		; LEA DI, Y2
-		; Receive SI
-		; Receive SI
-		; VERIFY RECEIVING BY RESENDING IT
-		; Send X2
-		; Receive DI
-		; VERIFY RECEIVING BY RESENDING IT
-		; Send Y2
-		
-		; VALIDATE NEW COORDINATES
-		; MOV AL, X2
-		; SUB AL, OLD_X2
-		; MOV AH, Y2
-		; SUB AH, OLD_Y2
-		; AND AL, AH
-		; JZ CONTINUE
-		; Receive SI
-		; MOV AL, OLD_X2
-		; MOV X2, AL
-		; MOV AH, OLD_Y2
-		; MOV Y2, AH
-		
-		; CONTINUE:
-		; THEN RECEIVE BOMBS COUNT
-		; LEA SI, B_COUNT
-		; Receive SI
-		
-		; THEN RECEIVE ALL X'S OF BOMBS
-		; MOV CX, B_COUNT
-		; LEA SI, BOMBX
-		
-		; RECEIVE_X:
-			; Receive [SI]
-			; INC SI
-			; LOOP RECEIVE_X
-			
-		; THEN RECEIVE ALL Y'S OF BOMBS
-		; MOV CX, B_COUNT
-		; LEA SI, BOMBY
-		
-		; RECEIVE_Y:
-			; Receive [SI]
-			; INC SI
-			; LOOP RECEIVE_Y
-			
-		; THEN RECEIVE ALL ACTIVE BOMBS DATA
-		; MOV CX, B_COUNT
-		; LEA SI, BOMB_ACTIVE
-		
-		; RECEIVE_ACTIVE:
-			; Receive [SI]
-			; INC SI
-			; LOOP RECEIVE_ACTIVE
 		
 	POPA
 ENDM ReceivePlayerData
+
 
 ExchangePlayerData MACRO
 	PUSHA
@@ -2705,6 +2598,7 @@ ENDM ExchangePlayerData
 
 PrintWaiting MACRO
 	PUSHA
+	
 		MOV XP, 0
 		MOV YP, 23
 		PrintStr WAITING, XP , YP
@@ -2715,11 +2609,7 @@ ENDM PrintWaiting
 SendInvitation MACRO
 	PUSHA
 	
-		;; sends an invitation to the other player with the name in it
-		;SendName
 		Send SENT_INVITATION
-		; ReceiveName
-		;SendName
 	
 	POPA
 ENDM SendInvitation
@@ -2728,8 +2618,6 @@ ReceiveInvitation MACRO
 	PUSHA
 	
 		LOCAL RECEIVE_INV, END_IT, COMPARE_INV
-		;; receives an invitation to the other player with the name in it
-		;ReceiveName
 		;; CHECK IF INVITATIONS ARE MATCHED
 		MOV AL, SENT_INVITATION
 		MOV AH, RECEIVED_INVITATION
@@ -2757,13 +2645,10 @@ ReceiveInvitation MACRO
 			MOV DL, RECEIVED_INVITATION
 			MOV SI, OFFSET RECEIVED_INVITATION
 			Receive SI
-			; SendName
-			;ReceiveName
 			CMP RECEIVED_INVITATION, 0
 			JNE COMPARE_INV
 			MOV RECEIVED_INVITATION, DL
 			
-	;	JZ PRINT IN THE NOTIFICATIONS THAT SECOND PLAYER ACCEPTED THE INVITATION
 		COMPARE_INV:
 			MOV AH, RECEIVED_INVITATION
 			CMP AL, AH
@@ -2783,9 +2668,9 @@ ENDM ReceiveInvitation
  
 
 NotificationBar MACRO
-	PUSHA
+	PUSHA	
+	LOCAL SENT_CHAT, SENT_GAME, REC_CHAT, REC_GAME, END_IT, CONTINUE
 		
-		LOCAL SENT_CHAT, SENT_GAME, REC_CHAT, REC_GAME, END_IT, CONTINUE
 		MOV XP, 0
 		MOV YP, 23
 		ClearLine YP
@@ -2796,11 +2681,7 @@ NotificationBar MACRO
 		JMP CONTINUE
 		
 		SENT_CHAT:
-			; MoveCursor XP, YP
-			; MOV AH,9H
-			; MOV DX,OFFSET SENT_CHAT_MESSAGE
-			; INT 21H  
-
+			
 			PrintStr SENT_CHAT_MESSAGE, XP, YP
 			MOV AH,9H
 			MOV DX,OFFSET P2_NAME[2]
@@ -2808,11 +2689,7 @@ NotificationBar MACRO
 			JMP CONTINUE
 		
 		REC_CHAT:
-			; MoveCursor XP, YP
-			; MOV AH,9H
-			; MOV DX,OFFSET P2_NAME[2]
-			; INT 21H  
-
+			
 			PrintStr REC_CHAT_MESSAGE, XP, YP
 			MOV AH,9H
 			MOV DX,OFFSET P2_NAME[2]
@@ -2831,10 +2708,6 @@ NotificationBar MACRO
 
 			
 		SENT_GAME:
-			; MoveCursor XP, YP
-			; MOV AH,9H
-			; MOV DX,OFFSET SENT_GAME_MESSAGE
-			; INT 21H  
 			PrintStr SENT_GAME_MESSAGE, XP, YP
 			MOV AH,9H
 			MOV DX,OFFSET P2_NAME[2]
@@ -2860,17 +2733,15 @@ ENDM NotificationBar
 ClearLine MACRO Y
 	PUSHA
 	
-		; LOCAL CLEAR
-		; MOV AL, Y
 		MoveCursor 0, Y 
 		
-			mov ah,9 ;Display
-			mov bh,0 ;Page 0
-			mov al,' ' ;Letter D
-			mov cx,80 ;5 times
-			mov bl,0Fh ;Green (A) on white(F) background
-			int 10h
-		
+		mov ah,9 ;Display
+		mov bh,0 ;Page 0
+		mov al,' ' ;Letter D
+		mov cx,80 ;5 times
+		mov bl,0Fh ;Green (A) on white(F) background
+		int 10h
+	
 	
 	POPA
 ENDM ClearLine
@@ -3263,6 +3134,7 @@ ChatMacro MACRO
 		LOCAL MAINLOOP, SEND_LETTER, RECEIVE_LETTER,END_IT
 		SplitScreen
 
+		;; SET NAMES
 		
 		PrintStr P1_NAME[2],XCHAT_1,YCHAT_1
 		PrintChar ':',XCHAT_1,YCHAT_1
@@ -3282,7 +3154,7 @@ ChatMacro MACRO
 		MAINLOOP:
 		
 		
-		GetKey
+		GetKey ;; GET PRESSED KEY
 		
 		Scroll
 		CMP VALUE_SEND, 0
@@ -3294,12 +3166,13 @@ ChatMacro MACRO
 		INC YCHAT_1
 		MOV XCHAT_1,0
 		
+		;;SEND THE STORED MESSEGE
 		Send_Mes MESSAGE
 		MOV VALUE_SEND,0
 
-
+		
 		RECEIVE_LETTER:
-
+		;; CHECK IF THEERE IS AN INPUT
 		Receive_Chat
 	
 
