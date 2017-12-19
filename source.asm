@@ -7,7 +7,7 @@ include macros.inc
           
 STATE				DB		 0  ; 0 => RULES , 1 => OPTIONS , 2 => GET LEVEL  
 								; 3 => INTRO , 4 => GAMEPLAY 
-								; 5 => WIN , 6 => CHAT , 7 => IN GAME CHAT
+								; 5 => WIN , 6 => CHAT
 								
 SENT_INVITATION		DB		 0  ; 0 => NO INVITATION OR NO RESPONSE
 								; 1 => SENT A CHAT INVITATION
@@ -241,9 +241,7 @@ MAIN    PROC FAR
 				CHAT_SCREEN:
 				    ChatMacro
 					JMP MAIN_LOOP
-				IN_CHAT_SCREEN:
-				    ; ChatMacro
-					JMP MAIN_LOOP
+
        
 
 MAIN    ENDP
