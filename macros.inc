@@ -25,8 +25,8 @@ ENDM LoadAllFiles
 Redirect MACRO
 								; 0 => RULES , 1 => OPTIONS ,  2 => GET LEVEL  
 								; 3 => INTRO , 4 => GAMEPLAY 
-								; 5 => WIN , 6 => CHAT 
-	LOCAL MODE_TEST, OPTIONS_TEST, INTRO_TEST, GAMEPLAY_TEST, WIN_TEST, CHAT_TEST
+								; 5 => WIN , 6 => CHAT , 7 => IN GAME CHAT
+	LOCAL MODE_TEST, OPTIONS_TEST, INTRO_TEST, GAMEPLAY_TEST, WIN_TEST, CHAT_TEST, IN_CHAT_TEST
 	
 	CMP STATE, 0
 	; JNZ RULES_TEST
@@ -72,6 +72,9 @@ Redirect MACRO
 	CHAT_TEST:
 		CMP STATE, 6
 		JZ CHAT_SCREEN
+	IN_CHAT_TEST:
+		CMP STATE, 7
+		JZ IN_CHAT_SCREEN
 
 
 
@@ -1256,7 +1259,7 @@ DetectAction MACRO
 
 		HandlePlayerFire
 		HandlePlayerMovement
-		;;HandleExit
+		HandleChat
 		FlushBuffer
 		
 		
@@ -1401,31 +1404,30 @@ HandleRemoteFire MACRO
 ENDM HandleRemoteFire
 
 
-HandleExit MACRO
+HandleChat MACRO
     PUSHA
 		LOCAL CONTINUE
-		LOCAL EXIT
+		LOCAL CHAT
 
         ;; GET KEY PRESSED 
 		MOV AH, 01
 		INT 16H
 		JZ CONTINUE
 		
-		CMP AH, 01H
-		JZ EXIT
+		CMP AH, 1CH
+		JZ CHAT
 		
 		
 		JMP CONTINUE
 		
-		EXIT:
-			MOV STATE, 1
-		    ;TERMINATE
+		CHAT:
+			MOV STATE, 7
 			
 		CONTINUE:
 	
   POPA
         
-ENDM HandleExit
+ENDM HandleChat
 ;;-------------------------------
 ;; PRINT THE BOMB ON THE SCREEN AND STORE ITS DATA IN BOMBX, BOMBY, BOMB_ACTIVE
 Fire MACRO X, Y, P

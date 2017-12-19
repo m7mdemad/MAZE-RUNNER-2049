@@ -7,7 +7,7 @@ include macros.inc
           
 STATE				DB		 0  ; 0 => RULES , 1 => OPTIONS , 2 => GET LEVEL  
 								; 3 => INTRO , 4 => GAMEPLAY 
-								; 5 => WIN , 6 => CHAT  
+								; 5 => WIN , 6 => CHAT , 7 => IN GAME CHAT
 								
 SENT_INVITATION		DB		 0  ; 0 => NO INVITATION OR NO RESPONSE
 								; 1 => SENT A CHAT INVITATION
@@ -209,8 +209,7 @@ MAIN    PROC FAR
 					JMP MAIN_LOOP
 				
 				GAMEPLAY_SCREEN:
-										Winner
-
+									
 					DrawScorebar
 					SetNames
 					PrintPlayers
@@ -226,17 +225,24 @@ MAIN    PROC FAR
 					CheckBombs 
 
 					SetScore
+					Winner
+
 					
 					JMP MAIN_LOOP
 
 					
 				WIN_SCREEN:
 					DrawWinScreen 
+					ExchangePlayerData	
+					
 					Sleep 50
 					Terminate
 					
 				CHAT_SCREEN:
 				    ChatMacro
+					JMP MAIN_LOOP
+				IN_CHAT_SCREEN:
+				    ; ChatMacro
 					JMP MAIN_LOOP
        
 
