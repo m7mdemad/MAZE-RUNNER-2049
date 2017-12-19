@@ -52,9 +52,8 @@ SCOREBAR            DB       2100 DUP('$')
 NAME_FILE			DB		 "P_NAME.txt",0
 NAMES				DB		 2100 DUP('$')
 
-P1_NAME				DB		 20, ?, 21 DUP('$');"$$$$$$$$$$$$$$$$$";20, ?, 21 DUP('$') ; STORE THE NAME OF PLAYER1
-P2_NAME				DB		 20, ?, 21 DUP('$');"$$$$$$$$$$$$$$$$$";20, ?, 21 DUP('$') ; STORE THE NAME OF PLAYER2
-
+P1_NAME				DB		 20, ?, 21 DUP('$') ; STORE THE NAME OF PLAYER1
+P2_NAME				DB		 20, ?, 21 DUP('$') ; STORE THE NAME OF PLAYER2
              
 WINNER_NO           DB       ? 
 WINNER_FILE			DB		 "WIN.txt",0
@@ -135,6 +134,26 @@ M_LETTER		    EQU		32H
 REMOTE_KEY			DB		0
 LOCAL_KEY			DB		0    
       
+                                    
+;=============CHAT STAFF============
+
+
+VALUE          DB      0
+VALUE_SEND     DB      0
+LETTER         DB      0
+XCHAT_1        DB      0
+YCHAT_1        DB      0
+
+XCHAT_2        DB      0
+YCHAT_2        DB      13
+
+MESSAGE        DB      100 DUP ('$')
+MES_LNS        DB      0 
+
+P2_LNS         DB      0
+                         
+NAME_INDEX     DB      0              
+
 
 
 ; MAXIMUM NUMBER OF MAZES IN EACH MODE IS: 38
@@ -153,8 +172,7 @@ MAIN    PROC FAR
 		   
 		    LoadAllFiles
 			ConfigureSerial
-    		GetName P1_NAME,NAME_FILE
-			
+    		GetName P1_NAME,NAME_FILE			
 			MAIN_LOOP:
 				Redirect
 				
@@ -166,6 +184,8 @@ MAIN    PROC FAR
 					JMP MAIN_LOOP
 
 				OPTIONS_SCREEN:
+					
+				 
 					Options
 					ExchangeNames
 					SendInvitation
@@ -217,8 +237,11 @@ MAIN    PROC FAR
 					Terminate
 					
 				CHAT_SCREEN:
+				    Chat_Macro
 					JMP MAIN_LOOP
        
 
 MAIN    ENDP
         END MAIN 
+                   
+ 
