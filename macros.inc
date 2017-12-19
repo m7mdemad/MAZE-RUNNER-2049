@@ -2876,379 +2876,385 @@ ClearLine MACRO Y
 ENDM ClearLine
 
 
-;;====================================================================
+;;=====================CHAT STAFF================================
 
 
 Send_Mes MACRO STRING
-PUSHA
-LOCAL SEND_IT, NEXT, END_IT
+	PUSHA
+	LOCAL SEND_IT, NEXT, END_IT
+	
+		LEA SI, STRING
+		MOV CX, 100
 
-LEA SI, STRING
-MOV CX, 100
+		SEND_IT:
+		MOV AL,[SI]
+		MOV LETTER,AL
+		Send_Chat
+		JMP NEXT
 
-SEND_IT:
-MOV AL,[SI]
-MOV LETTER,AL
-Send_Chat
-JMP NEXT
+		NEXT:
+		INC SI
+		CMP [SI],'$'
+		JZ END_IT
+		LOOP SEND_IT
 
-NEXT:
-INC SI
-CMP [SI],'$'
-JZ END_IT
-LOOP SEND_IT
+		END_IT:
+		ResetStr STRING
 
-END_IT:
-ResetStr STRING
-
-POPA
+	POPA
 ENDM Send_Mes
 
 
 ResetStr MACRO STRING
-PUSHA
-LOCAL RESET
+	PUSHA
+	LOCAL RESET
 
-MOV CX,100
-LEA SI, STRING
+		MOV CX,100
+		LEA SI, STRING
 
-RESET:
-MOV [SI],'$'
-INC SI
-LOOP RESET
+		RESET:
+		MOV [SI],'$'
+		INC SI
+		LOOP RESET
 
-POPA
+	POPA
 ENDM ResetStr
 
 
 Send_Chat MACRO
-PUSHA
+	PUSHA
+	LOCAL END_IT,newline,AGAIN
 
-local END_IT,newline,AGAIN
+		;Check that Transmitter Holding Register is Empty
+		mov dx , 3FDH        ; Line Status Register
+		AGAIN:  In al , dx             ;Read Line Status
+		AND al , 00100000b
+		JZ AGAIN
 
-;Check that Transmitter Holding Register is Empty
-mov dx , 3FDH        ; Line Status Register
-AGAIN:  In al , dx             ;Read Line Status
-AND al , 00100000b
-JZ AGAIN
+		;; check if it's a new line
+		MOV BL,LETTER
+		MOV BH,13
+		cmp BL, BH
+		jz newline
 
-;; check if it's a new line
-MOV BL,LETTER
-MOV BH,13
-cmp BL, BH
-jz newline
+		;If empty put the VALUE in Transmit data register
+		mov dx , 3F8H        ; Transmit data register
+		mov  al,LETTER
+		out dx , al
+		mov LETTER, 0
+		jmp END_IT
 
-;If empty put the VALUE in Transmit data register
-mov dx , 3F8H        ; Transmit data register
-mov  al,LETTER
-out dx , al
-mov LETTER, 0
-jmp END_IT
+		newline:
+		mov dx , 3F8H        ; Transmit data register
+		mov  al,LETTER
+		out dx , al
+		mov LETTER, 10
 
-newline:
-mov dx , 3F8H        ; Transmit data register
-mov  al,LETTER
-out dx , al
-mov LETTER, 10
+		END_IT:
 
-END_IT:
-
-POPA
+	POPA
 ENDM Send_Chat
 
 
 Receive_Chat MACRO
-PUSHA
+	PUSHA
+	LOCAL NOTRECEIVED, END_IT, NEW_LINE,CLEAR_EMOJI
 
-LOCAL NOTRECEIVED, END_IT, NEW_LINE
+		;Check that Data Ready
+		mov dx , 3FDH        ; Line Status Register
+		in al , dx
+		AND al , 1
+		JZ NOTRECEIVED
 
-;Check that Data Ready
-mov dx , 3FDH        ; Line Status Register
-in al , dx
-AND al , 1
-JZ NOTRECEIVED
+		;If Ready read the VALUE in Receive data register
 
-;If Ready read the VALUE in Receive data register
-mov dx , 03F8H
-in al , dx
-CMP AL, 1CH
-JZ NEW_LINE
-mov VALUE , al
-PrintChar VALUE,XCHAT_2,YCHAT_2
-INC XCHAT_2
+		mov dx , 03F8H
+		in al , dx
+		CMP AL, 1CH
+		JZ NEW_LINE
+		mov VALUE , al
 
-JMP END_IT
+		CMP VALUE,1
+		JZ CLEAR_EMOJI
 
-NEW_LINE:
-MOV XCHAT_2,0
-INC YCHAT_2
-JMP END_IT
+		CMP VALUE,2
+		JZ CLEAR_EMOJI
 
-NOTRECEIVED:
 
-MOV VALUE, 0
+		PrintChar VALUE,XCHAT_2,YCHAT_2
+		INC XCHAT_2
 
-END_IT:
+		JMP END_IT
 
-POPA
+		NEW_LINE:
+		MOV XCHAT_2,0
+		INC YCHAT_2
+		JMP END_IT
+
+		CLEAR_EMOJI:
+
+		MOV VALUE,0
+		JMP END_IT
+
+		NOTRECEIVED:
+
+		MOV VALUE, 0
+
+		END_IT:
+
+	POPA
 ENDM
 
 
 PrintStr MACRO STRING, X, Y
-PUSHA
+	PUSHA
+	LOCAL PRINT_STR, PRINT_CHAR, NEXT, END_IT
+
+		LEA SI,STRING
+		MOV CX, 100
+
+		MOV DL,0
+		MOV DH,Y
+
+		MOV AH,2H
+		MOV BH,0
+		INT 10H
+
+		PRINT_STR:
+		CMP [SI],'$'
+
+		JZ END_IT
 
 
-LOCAL PRINT_STR, PRINT_CHAR, NEXT, END_IT
+		PRINT_CHAR:
+		CMP [SI],1CH
+		JZ NEXT
 
-LEA SI,STRING
-MOV CX, 100
+		MOV AH,2
+		MOV DL,[SI]
+		INT 21H
+		INC X
 
-MOV DL,0
-MOV DH,Y
+		JMP NEXT
 
-MOV AH,2H
-MOV BH,0
-INT 10H
+		NEXT:
+		INC SI
+		LOOP PRINT_STR
 
-PRINT_STR:
-CMP [SI],'$'
-
-JZ END_IT
-
-
-PRINT_CHAR:
-CMP [SI],1CH
-JZ NEXT
-
-MOV AH,2
-MOV DL,[SI]
-INT 21H
-INC X
-
-JMP NEXT
-
-NEXT:
-INC SI
-LOOP PRINT_STR
-
-END_IT:
+		END_IT:
 
 
-
-POPA
+	POPA
 ENDM PrintStr
 
 
 GetKey MACRO
-PUSHA
-LOCAL END_IT, SEND_MESSAGE_NOW, NEW_LINE, BACKSPACE
+	PUSHA
+	LOCAL END_IT, SEND_MESSAGE_NOW, NEW_LINE, BACKSPACE
 
-mov ah,1
-int 16h
-jz END_IT
-
-
-MOV AH,0
-INT 16H
-CMP AH,1CH
-JZ SEND_MESSAGE_NOW
-
-CMP AH,0EH
-JZ BACKSPACE
-
-CMP AL,08
-JZ BACKSPACE
-
-LEA SI, MESSAGE
-MOV BL,MES_LNS
-MOV BH,0
-ADD SI, BX
-MOV [SI], AL
-INC MES_LNS
-PrintStr MESSAGE, XCHAT_1, YCHAT_1
-JMP END_IT
+		mov ah,1
+		int 16h
+		jz END_IT
 
 
-BACKSPACE:
-DEC MES_LNS
-LEA SI,MESSAGE
-MOV BL,MES_LNS
-MOV BH,0
-ADD SI, BX
-MOV [SI],' '
-PrintStr MESSAGE, XCHAT_1, YCHAT_1
-MOV [SI],'$'
-JMP END_IT
+		MOV AH,0
+		INT 16H
+		CMP AH,1CH
+		JZ SEND_MESSAGE_NOW
 
-SEND_MESSAGE_NOW:
+		CMP AH,0EH
+		JZ BACKSPACE
 
-LEA SI, MESSAGE
-MOV BL,MES_LNS
-MOV BH,0
-ADD SI, BX
-MOV [SI], AH
-INC MES_LNS
+		CMP AL,08
+		JZ BACKSPACE
 
-MOV VALUE_SEND,1
-MOV MES_LNS, 0
-JMP END_IT
+		LEA SI, MESSAGE
+		MOV BL,MES_LNS
+		MOV BH,0
+		ADD SI, BX
+		MOV [SI], AL
+		INC MES_LNS
+		PrintStr MESSAGE, XCHAT_1, YCHAT_1
+		JMP END_IT
 
-END_IT:
 
-POPA
+		BACKSPACE:
+		DEC MES_LNS
+		LEA SI,MESSAGE
+		MOV BL,MES_LNS
+		MOV BH,0
+		ADD SI, BX
+		MOV [SI],' '
+		PrintStr MESSAGE, XCHAT_1, YCHAT_1
+		MOV [SI],'$'
+		JMP END_IT
+
+		SEND_MESSAGE_NOW:
+
+		LEA SI, MESSAGE
+		MOV BL,MES_LNS
+		MOV BH,0
+		ADD SI, BX
+		MOV [SI], AH
+		INC MES_LNS
+
+		MOV VALUE_SEND,1
+		MOV MES_LNS, 0
+		JMP END_IT
+
+		END_IT:
+
+	POPA
 ENDM
 
 
 
 
 PrintChar MACRO CHAR, X, Y
-PUSHA
-
-local SCROLL_UP
-LOCAL SCROLL_DOWN
-LOCAL PRINT
+	PUSHA
+	LOCAL SCROLL_UP,SCROLL_DOWN,PRINT
 
 
-MOV AL, X
-SUB AL, 79
-MOV AH, Y
-SUB AH, 11
+		MOV AL, X
+		SUB AL, 79
+		MOV AH, Y
+		SUB AH, 11
 
-OR AH, AL
-CMP AH, 0
-JZ SCROLL_UP
-
-
-MOV AL, X
-SUB AL, 79
-MOV AH, Y
-SUB AH, 24
-
-OR AH, AL
-CMP AH, 0
-JZ SCROLL_DOWN
-
-JMP PRINT
+		OR AH, AL
+		CMP AH, 0
+		JZ SCROLL_UP
 
 
-SCROLL_UP:
+		MOV AL, X
+		SUB AL, 79
+		MOV AH, Y
+		SUB AH, 24
 
-mov ah,6       ; v function 6
-mov al,1        ; scroll by 1 line
-mov bh,7       ; normalideo attribute
-mov ch,0       ; upper left Y
-mov cl,0        ; upper left X
-mov dh,11     ; lower right Y
-mov dl,79      ; lower right X
-int 10h
-DEC Y
+		OR AH, AL
+		CMP AH, 0
+		JZ SCROLL_DOWN
 
-JMP PRINT
-
-SCROLL_DOWN:
-
-mov ah,6       ; v function 6
-mov al,1        ; scroll by 1 line
-mov bh,7       ; normalideo attribute
-mov ch,13       ; upper left Y
-mov cl,0        ; upper left X
-mov dh,24     ; lower right Y
-mov dl,79      ; lower right X
-int 10h
-DEC Y
-
-JMP PRINT
-
-PRINT:
-mov ch, X
-mov cl, Y
-MoveCursor ch, cl
-mov ah,2
-mov dl,CHAR
-int 21h
+		JMP PRINT
 
 
-POPA
+		SCROLL_UP:
+
+		mov ah,6       ; v function 6
+		mov al,1        ; scroll by 1 line
+		mov bh,7       ; normalideo attribute
+		mov ch,0       ; upper left Y
+		mov cl,0        ; upper left X
+		mov dh,11     ; lower right Y
+		mov dl,79      ; lower right X
+		int 10h
+		DEC Y
+
+		JMP PRINT
+
+		SCROLL_DOWN:
+
+		mov ah,6       ; v function 6
+		mov al,1        ; scroll by 1 line
+		mov bh,7       ; normalideo attribute
+		mov ch,13       ; upper left Y
+		mov cl,0        ; upper left X
+		mov dh,24     ; lower right Y
+		mov dl,79      ; lower right X
+		int 10h
+		DEC Y
+
+		JMP PRINT
+
+		PRINT:
+		mov ch, X
+		mov cl, Y
+		MoveCursor ch, cl
+		mov ah,2
+		mov dl,CHAR
+		int 21h
+
+
+	POPA
 ENDM
 
 
 SplitScreen MACRO
-PUSHA
+	PUSHA
 
-mov ax, 0600h
-mov bh, 07
-mov cx, 0
-mov dx, 184fh
-int 10h
+		mov ax, 0600h
+		mov bh, 07
+		mov cx, 0
+		mov dx, 184fh
+		int 10h
 
-MoveCursor 0, 12
+		MoveCursor 0, 12
 
-mov cx, 80
-PRINTDASH:
-mov ah,2
-mov dl,'-'
-int 21h
-loop PRINTDASH
+		mov cx, 80
+		PRINTDASH:
+		mov ah,2
+		mov dl,'-'
+		int 21h
+		loop PRINTDASH
 
-POPA
+	POPA
 ENDM SplitScreen
 
 Scroll MACRO
-PUSHA
-LOCAL SCROLL_UP_1, SCROLL_UP_2, NEW_LINE_1, NEW_LINE_2, END_IT
+	PUSHA
+	LOCAL SCROLL_UP_1, SCROLL_UP_2, NEW_LINE_1, NEW_LINE_2, END_IT
 
-CMP YCHAT_1,11
-JZ SCROLL_UP_1
+		CMP YCHAT_1,11
+		JZ SCROLL_UP_1
 
-CMP YCHAT_2,23
-JZ SCROLL_UP_2
+		CMP YCHAT_2,23
+		JZ SCROLL_UP_2
 
-CMP XCHAT_1,79
-JZ NEW_LINE_1
+		CMP XCHAT_1,79
+		JZ NEW_LINE_1
 
-CMP XCHAT_2,79
-JZ NEW_LINE_2
+		CMP XCHAT_2,79
+		JZ NEW_LINE_2
 
-JMP END_IT
+		JMP END_IT
 
-SCROLL_UP_1:
-mov ah,6       ; v function 6
-mov al,1        ; scroll by 1 line
-mov bh,7       ; normalideo attribute
-mov ch,0       ; upper left Y
-mov cl,0        ; upper left X
-mov dh,11     ; lower right Y
-mov dl,79      ; lower right X
-int 10h
-DEC YCHAT_1
-JMP END_IT
+		SCROLL_UP_1:
+		mov ah,6       ; v function 6
+		mov al,1        ; scroll by 1 line
+		mov bh,7       ; normalideo attribute
+		mov ch,1       ; upper left Y
+		mov cl,0        ; upper left X
+		mov dh,11     ; lower right Y
+		mov dl,79      ; lower right X
+		int 10h
+		DEC YCHAT_1
+		JMP END_IT
 
-SCROLL_UP_2:
-mov ah,6       ; v function 6
-mov al,1        ; scroll by 1 line
-mov bh,7       ; normalideo attribute
-mov ch,13       ; upper left Y
-mov cl,0        ; upper left X
-mov dh,24     ; lower right Y
-mov dl,79      ; lower right X
-int 10h
-DEC YCHAT_2
-JMP END_IT
+		SCROLL_UP_2:
+		mov ah,6       ; v function 6
+		mov al,1        ; scroll by 1 line
+		mov bh,7       ; normalideo attribute
+		mov ch,14       ; upper left Y
+		mov cl,0        ; upper left X
+		mov dh,24     ; lower right Y
+		mov dl,79      ; lower right X
+		int 10h
+		DEC YCHAT_2
+		JMP END_IT
 
-NEW_LINE_1:
-MOV XCHAT_1,0
-INC YCHAT_1
-JMP END_IT
+		NEW_LINE_1:
+		MOV XCHAT_1,0
+		INC YCHAT_1
+		JMP END_IT
 
 
-NEW_LINE_2:
-MOV XCHAT_2,0
-INC YCHAT_2
-JMP END_IT
+		NEW_LINE_2:
+		MOV XCHAT_2,0
+		INC YCHAT_2
+		JMP END_IT
 
-END_IT:
+		END_IT:
 
-POPA
+	POPA
 ENDM Scroll
 
 
@@ -3257,12 +3263,27 @@ ChatMacro MACRO
 		LOCAL MAINLOOP, SEND_LETTER, RECEIVE_LETTER,END_IT
 		SplitScreen
 
-		;;MOV AL,' '
-		;;PrintChar AL,XCHAT_2,YCHAT_2
+		
+		PrintStr P1_NAME[2],XCHAT_1,YCHAT_1
+		PrintChar ':',XCHAT_1,YCHAT_1
+		INC YCHAT_1
+		MOV AL,0
+		MOV XCHAT_1,AL
+		
+		PrintStr P2_NAME[2],XCHAT_2,YCHAT_2
+		PrintChar ':',XCHAT_2,YCHAT_2
+		INC YCHAT_2
+		MOV AL,0
+		MOV XCHAT_2,AL
+		
+		
+		
 		
 		MAINLOOP:
-
+		
+		
 		GetKey
+		
 		Scroll
 		CMP VALUE_SEND, 0
 		JNZ SEND_LETTER
@@ -3272,7 +3293,7 @@ ChatMacro MACRO
 		PrintStr MESSAGE, XCHAT_1, YCHAT_1
 		INC YCHAT_1
 		MOV XCHAT_1,0
-
+		
 		Send_Mes MESSAGE
 		MOV VALUE_SEND,0
 
@@ -3280,7 +3301,7 @@ ChatMacro MACRO
 		RECEIVE_LETTER:
 
 		Receive_Chat
-
+	
 
 		END_IT:
 

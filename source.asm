@@ -151,7 +151,8 @@ MES_LNS        DB      0
 
 P2_LNS         DB      0
                          
-NAME_INDEX     DB      0              
+NAME_INDEX     DB      0 
+EMOJI          DB      0             
 
 
 
