@@ -17,6 +17,7 @@ RECEIVED_INVITATION	DB		 0
 MATCHED				DB		 0 	; 1 => GOT MATCHED WITH THE SECOND PLAYER
 GOT_INVITED			DB		 0
 
+
 SENT_CHAT_MESSAGE	DB		 "You have sent a chat invitation to ","$"
 SENT_GAME_MESSAGE	DB		 "You have sent a game invitation to ","$"
 REC_CHAT_MESSAGE	DB		 "you have received a chat invitation. Press F1 to accept it from ","$"
@@ -82,6 +83,7 @@ BOMB_ACTIVE         DB       50 DUP(3)  ; 0-> ACTIVE, 1-> PLAYER1 PLANTED IT BUT
 B_COUNT             DW       1 
 
 P1_POSTPONE         DB       0 ; FREEZE PLAYER ONE FOR P1_POSPONE MOVES
+P2_POSTPONE         DB       0 ; FREEZE PLAYER TWO FOR P2_POSPONE MOVES
         
 MOTION_DELAY        DB       20
 FIRE_DELAY          DB       15
@@ -94,6 +96,7 @@ RAND_2_LNS          DB      4
      
 
 HOLD_FIRE_1         DB      0 ; HOLD THE FIRE OF PLAYER1 FOR HOLD_FIRE_1 MOVES
+HOLD_FIRE_2         DB      0 ; HOLD THE FIRE OF PLAYER2 FOR HOLD_FIRE_2 MOVES
         
                              
 XP                  DB      ?
@@ -108,12 +111,17 @@ END_GAME            DB      0
                        
                        
 ; CHANGE ON STEPPING ON BOMB
-UP_ARROW		    DB   	48H
-DOWN_ARROW	     	DB		50H
-RIGHT_ARROW		    DB		4DH
-LEFT_ARROW		    DB		4BH
+UP_ARROW1		    DB   	48H
+DOWN_ARROW1	     	DB		50H
+RIGHT_ARROW1	    DB		4DH
+LEFT_ARROW1		    DB		4BH
                          
-                       
+UP_ARROW2		    DB   	48H
+DOWN_ARROW2	     	DB		50H
+RIGHT_ARROW2	    DB		4DH
+LEFT_ARROW2		    DB		4BH
+
+						 
 ; NEVER CHANGE
 UP_ARROW_PER		EQU   	48H
 DOWN_ARROW_PER		EQU		50H
@@ -123,7 +131,9 @@ LEFT_ARROW_PER		EQU		4BH
 
 F_LETTER		    EQU		21H
 M_LETTER		    EQU		32H
-    
+
+REMOTE_KEY			DB		0
+LOCAL_KEY			DB		0    
       
 
 
@@ -183,16 +193,16 @@ MAIN    PROC FAR
 					SetNames
 					
 					PrintPlayers
-					; PrintBombs  
+					PrintBombs  
 					DetectAction
-					
+					DetectRemoteAction
 					ExchangePlayerData	
 					
 
-					; TestBombs 1,X1,Y1
-					; TestBombs 2,X2,Y2
+					 TestBombs 1,X1,Y1
+					 TestBombs 2,X2,Y2
 
-					; CheckBombs 
+					 CheckBombs 
 
 					SetScore
 

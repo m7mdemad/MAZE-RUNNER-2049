@@ -737,16 +737,16 @@ HandlePlayerMovement MACRO
 		
 		
 		;; HANDLE EACH KEY ACCORDING TO ITS SCANCODE
-		CMP AH, UP_ARROW
+		CMP AH, UP_ARROW1
 		JZ MOVE_UP1
 		
-		CMP AH, LEFT_ARROW
+		CMP AH, LEFT_ARROW1
 		JZ MOVE_LEFT1
 		
-		CMP AH, DOWN_ARROW
+		CMP AH, DOWN_ARROW1
 		JZ MOVE_DOWN1
 		
-		CMP AH, RIGHT_ARROW
+		CMP AH, RIGHT_ARROW1
 		JZ MOVE_RIGHT1
 		
 		;; if not caught until here, ignore it because it's a bad key
@@ -754,24 +754,28 @@ HandlePlayerMovement MACRO
 		
 		
 		MOVE_UP1:
+			MOV LOCAL_KEY, AH
 		    MOD_P1_POSTPONE
 			ClearPosition X1, Y1
 			MoveUp X1, Y1
 			JMP CONTINUE
 
 		MOVE_LEFT1:
+			MOV LOCAL_KEY, AH
 			MOD_P1_POSTPONE
 			ClearPosition X1, Y1
 			MoveLeft X1, Y1
 			JMP CONTINUE
 
 		MOVE_DOWN1:
+			MOV LOCAL_KEY, AH
 			MOD_P1_POSTPONE
 			ClearPosition X1, Y1
 			MoveDown X1, Y1
 			JMP CONTINUE
 			
 		MOVE_RIGHT1:
+			MOV LOCAL_KEY, AH
 		    MOD_P1_POSTPONE
 			ClearPosition X1, Y1
 			MoveRight X1, Y1
@@ -782,6 +786,71 @@ HandlePlayerMovement MACRO
     POPA
 ENDM HandlePlayerMovement
     
+HandleRemoteMovement MACRO
+    PUSHA
+		
+		LOCAL MOVE_UP2
+		LOCAL MOVE_RIGHT2
+		LOCAL MOVE_LEFT2
+		LOCAL MOVE_DOWN2
+		
+		
+		LOCAL CONTINUE
+		
+		;; CHECK IF A KEY WAS PRESSED
+		CMP REMOTE_KEY, 0
+		JZ CONTINUE
+		MOV AH, REMOTE_KEY
+		
+		;; HANDLE EACH KEY ACCORDING TO ITS SCANCODE
+		CMP AH, UP_ARROW2
+		JZ MOVE_UP2
+		
+		CMP AH, LEFT_ARROW2
+		JZ MOVE_LEFT2
+		
+		CMP AH, DOWN_ARROW2
+		JZ MOVE_DOWN2
+		
+		CMP AH, RIGHT_ARROW2
+		JZ MOVE_RIGHT2
+		
+		
+		;; if not caught until here, ignore it because it's a bad key
+		JMP CONTINUE
+
+		MOVE_UP2:
+		    MOD_P2_POSTPONE
+			ClearPosition X2, Y2
+			MoveUp X2, Y2
+			JMP CONTINUE
+
+		MOVE_LEFT2:
+			MOD_P2_POSTPONE
+			ClearPosition X2, Y2
+			MoveLeft X2, Y2
+			JMP CONTINUE
+
+		MOVE_DOWN2:
+		    MOD_P2_POSTPONE
+			ClearPosition X2, Y2
+			MoveDown X2, Y2
+			JMP CONTINUE
+			
+		MOVE_RIGHT2:
+		    MOD_P2_POSTPONE
+			ClearPosition X2, Y2
+			MoveRight X2, Y2
+			JMP CONTINUE
+
+    
+		CONTINUE:
+		
+    POPA
+ENDM HandleRemoteMovement
+
+	
+	
 ;; move the player with x,y coordinates upwards    
 MoveUp	MACRO	X,Y
 	PUSHA
@@ -809,6 +878,12 @@ MoveUp	MACRO	X,Y
 		
 		
 		MAKE_PEEP:
+			MOV AL, X
+			MOV AH, Y
+			SUB AL, X2
+			SUB AH, Y2
+			OR AL, AH
+			JZ CONTINUE
 			Peep
 		
 		CONTINUE:
@@ -843,6 +918,12 @@ MoveLeft	MACRO	X,Y
 		
 		
 		MAKE_PEEP:
+			MOV AL, X
+			MOV AH, Y
+			SUB AL, X2
+			SUB AH, Y2
+			OR AL, AH
+			JZ CONTINUE
 			Peep
 		
 		CONTINUE:
@@ -878,6 +959,12 @@ MoveDown	MACRO	X,Y
 		
 		
 		MAKE_PEEP:
+			MOV AL, X
+			MOV AH, Y
+			SUB AL, X2
+			SUB AH, Y2
+			OR AL, AH
+			JZ CONTINUE
 			Peep
 		
 		CONTINUE:
@@ -913,6 +1000,12 @@ MoveRight	MACRO	X,Y
 		
 		
 		MAKE_PEEP:
+			MOV AL, X
+			MOV AH, Y
+			SUB AL, X2
+			SUB AH, Y2
+			OR AL, AH
+			JZ CONTINUE
 			Peep
 		
 		CONTINUE:
@@ -1113,16 +1206,16 @@ MOD_P1_POSTPONE MACRO
 			JNZ END_1
 			
 			MOV AL,UP_ARROW_PER
-			MOV UP_ARROW,AL
+			MOV UP_ARROW1,AL
 			
 			MOV AL,DOWN_ARROW_PER
-			MOV DOWN_ARROW,AL
+			MOV DOWN_ARROW1,AL
 			
 			MOV AL,LEFT_ARROW_PER
-			MOV LEFT_ARROW,AL
+			MOV LEFT_ARROW1,AL
 			
 			MOV AL,RIGHT_ARROW_PER
-			MOV RIGHT_ARROW,AL
+			MOV RIGHT_ARROW1,AL
 			
 			JMP END_2
 			
@@ -1143,25 +1236,25 @@ MOD_P2_POSTPONE MACRO
 			CMP P2_POSTPONE,0
 			JNZ END_1
 			
-			MOV AL,W_LETTER_PER
-			MOV W_LETTER,AL
+			MOV AL,UP_ARROW_PER
+			MOV UP_ARROW2,AL
 			
-			MOV AL,S_LETTER_PER
-			MOV S_LETTER,AL
+			MOV AL,DOWN_ARROW_PER
+			MOV DOWN_ARROW2,AL
 			
-			MOV AL,A_LETTER_PER
-			MOV A_LETTER,AL
+			MOV AL,LEFT_ARROW_PER
+			MOV LEFT_ARROW2,AL
 			
-			MOV AL,D_LETTER_PER
-			MOV D_LETTER,AL
+			MOV AL,RIGHT_ARROW_PER
+			MOV RIGHT_ARROW2,AL
 			
 			JMP END_2
 			
 			END_1:
-			      DEC P2_POSTPONE
-                  JMP END_2
+				DEC P2_POSTPONE
+				JMP END_2
 				  
-	        END_2:	
+			END_2:	
 		POPA
 ENDM MOD_P2_POSTPONE
 
@@ -1173,12 +1266,13 @@ DetectAction MACRO
 		MOV AH, 01
 		INT 16H
 		JZ CONTINUE	;; if no, skip
-		        
 
-		;;HandlePlayerFire
+		HandlePlayerFire
 		HandlePlayerMovement
 		;;HandleExit
 		FlushBuffer
+		
+		
 		
 		
 		
@@ -1188,6 +1282,28 @@ CONTINUE:
     POPA
         
 ENDM DetectAction
+
+DetectRemoteAction MACRO
+    PUSHA
+     LOCAL CONTINUE
+		;; CHECK IF A REMOTE KEY WAS PRESSED
+		CMP REMOTE_KEY, 0
+		JZ CONTINUE	;; if no, skip
+		        
+
+		HandleRemoteFire
+		HandleRemoteMovement
+		;;HandleExit
+		
+		
+		
+		JMP CONTINUE
+        
+CONTINUE:
+    POPA
+        
+ENDM DetectRemoteAction
+
 
 
 
@@ -1239,17 +1355,43 @@ HandlePlayerFire MACRO
 		CMP AH, M_LETTER
 		JZ FIRE1
 		
-		CMP AH, F_LETTER
-		JZ FIRE2
-		
 		JMP CONTINUE
 		
 		FIRE1:
+			MOV LOCAL_KEY, AH
 		    CMP HOLD_FIRE_1,0
 			JNZ DEC_HOLD_1 ;; PLAYER 1 CAN'T FIRE AGAIN YET 
 			FIRE X1, Y1 , 1
 			MOV HOLD_FIRE_1,AL ;; HOLD FIRE THE NEXT "FIRE_DELAY" TIMES
 			JMP CONTINUE
+			
+
+		;; IGNORE ACTION AND DEC HOLD_FIRE_1 OR HOLD_FIRE_2	
+        DEC_HOLD_1:
+			DEC HOLD_FIRE_1
+            JMP CONTINUE			
+        
+		CONTINUE:
+	
+  POPA
+        
+ENDM HandlePlayerFire
+
+
+HandleRemoteFire MACRO
+    PUSHA
+		LOCAL CONTINUE
+
+        ;; GET KEY PRESSED 
+		CMP REMOTE_KEY, 0
+		JZ CONTINUE
+		
+		MOV AL,FIRE_DELAY
+		
+		CMP REMOTE_KEY, M_LETTER
+		JZ FIRE2
+		
+		JMP CONTINUE
 			
 		FIRE2:
 		    CMP HOLD_FIRE_2,0
@@ -1259,11 +1401,7 @@ HandlePlayerFire MACRO
 			JMP CONTINUE
 
 		;; IGNORE ACTION AND DEC HOLD_FIRE_1 OR HOLD_FIRE_2	
-        DEC_HOLD_1:
-			DEC HOLD_FIRE_1
-            JMP CONTINUE			
-		
-		
+				
 		DEC_HOLD_2:
 			DEC HOLD_FIRE_2
             JMP CONTINUE
@@ -1273,7 +1411,7 @@ HandlePlayerFire MACRO
 	
   POPA
         
-ENDM HandlePlayerFire
+ENDM HandleRemoteFire
 
 
 HandleExit MACRO
@@ -1600,21 +1738,16 @@ ENDM Bang
 Shuffle1 MACRO 
   PUSHA
         
-		LEA SI,RAND_1
 
 		;; randomize numbers with uniqueness
-		RandUnique
 		
-		Select_UP_1 [SI]
-		INC SI
+		Select_UP_1 2
 
-		Select_DOWN_1 [SI]
-		INC SI
+		Select_DOWN_1 1
 
-		Select_LEFT_1 [SI]
-		INC SI
+		Select_LEFT_1 4
 		  
-		Select_RIGHT_1 [SI]		
+		Select_RIGHT_1 3	
 		
 	    
   POPA	
@@ -1644,17 +1777,17 @@ Select_UP_1 MACRO S
 		
         DOWN_1:
 		    MOV AL,DOWN_ARROW_PER
-            MOV UP_ARROW,AL
+            MOV UP_ARROW1,AL
             JMP END_IT
         
         LEFT_1:
 		    MOV AL,LEFT_ARROW_PER
-            MOV UP_ARROW,AL
+            MOV UP_ARROW1,AL
             JMP END_IT
 			
 		RIGHT_1:
 		    MOV AL,RIGHT_ARROW_PER
-            MOV UP_ARROW,AL
+            MOV UP_ARROW1,AL
             JMP END_IT
         
 		END_IT:		
@@ -1684,17 +1817,17 @@ Select_DOWN_1 MACRO S
 		
         UP_1:
 		    MOV AL,UP_ARROW_PER
-            MOV DOWN_ARROW,AL
+            MOV DOWN_ARROW1,AL
             JMP END_IT
         
         LEFT_1:
 		    MOV AL,LEFT_ARROW_PER
-            MOV DOWN_ARROW,AL
+            MOV DOWN_ARROW1,AL
             JMP END_IT
 			
 		RIGHT_1:
 		    MOV AL,RIGHT_ARROW_PER
-            MOV DOWN_ARROW,AL
+            MOV DOWN_ARROW1,AL
             JMP END_IT
         
         END_IT:		
@@ -1724,17 +1857,17 @@ Select_LEFT_1 MACRO S
 		
         UP_1:
 		    MOV AL,UP_ARROW_PER
-            MOV LEFT_ARROW,AL
+            MOV LEFT_ARROW1,AL
             JMP END_IT
         
         DOWN_1:
 		    MOV AL,DOWN_ARROW_PER
-            MOV LEFT_ARROW,AL
+            MOV LEFT_ARROW1,AL
             JMP END_IT
 			
 		RIGHT_1:
 		    MOV AL,RIGHT_ARROW_PER
-            MOV LEFT_ARROW,AL
+            MOV LEFT_ARROW1,AL
             JMP END_IT
         		
         END_IT:        
@@ -1764,17 +1897,17 @@ Select_RIGHT_1 MACRO S
 		
         UP_1:
 		    MOV AL,UP_ARROW_PER
-            MOV RIGHT_ARROW,AL
+            MOV RIGHT_ARROW1,AL
             JMP END_IT
         
         DOWN_1:
 		    MOV AL,DOWN_ARROW_PER
-            MOV RIGHT_ARROW,AL
+            MOV RIGHT_ARROW1,AL
             JMP END_IT
 			
 		LEFT_1:
 		    MOV AL,LEFT_ARROW_PER
-            MOV RIGHT_ARROW,AL
+            MOV RIGHT_ARROW1,AL
             JMP END_IT
         
         END_IT:		
@@ -1788,27 +1921,19 @@ ENDM Select_RIGHT_1
 Shuffle2 MACRO 
   PUSHA
         
-		LEA SI,RAND_1
+		Select_UP_2 2
 
-		;; randomize numbers with uniqueness
-		RandUnique
-		
-		Select_UP_2 [SI]
-		INC SI
+		Select_DOWN_2 1
 
-		Select_DOWN_2 [SI]
-		INC SI
-
-		Select_LEFT_2 [SI]
-		INC SI
+		Select_LEFT_2 4
 		  
-		Select_RIGHT_2 [SI]		
-		
+		Select_RIGHT_2 3			
 	    
   POPA	
 ENDM Shuffle2
 ;---------------------------------------
-;; CHANGE THE SCANCODE OF THE UP KEY OF THE SECOND PLAYER (W)
+;;--------------------------------------------
+;; CHANGE THE SCANCODE OF THE UP KEY OF THE SECOND PLAYER (^)
 Select_UP_2 MACRO S
    PUSHA
     LOCAL END_IT
@@ -1829,28 +1954,26 @@ Select_UP_2 MACRO S
         JZ RIGHT_2
 		
         DOWN_2:
-		    MOV AL,S_LETTER_PER
-            MOV W_LETTER,AL
+		    MOV AL,DOWN_ARROW_PER
+            MOV UP_ARROW2,AL
             JMP END_IT
         
         LEFT_2:
-		    MOV AL,A_LETTER_PER
-            MOV W_LETTER,AL
+		    MOV AL,LEFT_ARROW_PER
+            MOV UP_ARROW2,AL
             JMP END_IT
 			
 		RIGHT_2:
-		    MOV AL,D_LETTER_PER
-            MOV W_LETTER,AL
+		    MOV AL,RIGHT_ARROW_PER
+            MOV UP_ARROW2,AL
             JMP END_IT
-        		
         
-        END_IT:
-
-		
+		END_IT:		
+                      
    POPA
 ENDM Select_UP_2
 ;;--------------------------------------------
-;; CHANGE THE SCANCODE OF THE DOWN KEY OF THE SECOND PLAYER (S)
+;; CHANGE THE SCANCODE OF THE DOWN KEY OF THE SECOND PLAYER 
 Select_DOWN_2 MACRO S
    PUSHA
     LOCAL END_IT
@@ -1871,18 +1994,18 @@ Select_DOWN_2 MACRO S
         JZ RIGHT_2
 		
         UP_2:
-		    MOV AL,W_LETTER_PER
-            MOV S_LETTER,AL
+		    MOV AL,UP_ARROW_PER
+            MOV DOWN_ARROW2,AL
             JMP END_IT
         
         LEFT_2:
-		    MOV AL,A_LETTER_PER
-            MOV S_LETTER,AL
+		    MOV AL,LEFT_ARROW_PER
+            MOV DOWN_ARROW2,AL
             JMP END_IT
 			
 		RIGHT_2:
-		    MOV AL,D_LETTER_PER
-            MOV S_LETTER,AL
+		    MOV AL,RIGHT_ARROW_PER
+            MOV DOWN_ARROW2,AL
             JMP END_IT
         
         END_IT:		
@@ -1890,7 +2013,7 @@ Select_DOWN_2 MACRO S
    POPA
 ENDM Select_DOWN_2
 ;;--------------------------------------------
-;; CHANGE THE SCANCODE OF THE LEFT KEY OF THE SECOND PLAYER (A)
+;; CHANGE THE SCANCODE OF THE LEFT KEY OF THE SECOND PLAYER
 Select_LEFT_2 MACRO S
    PUSHA
     LOCAL END_IT
@@ -1911,27 +2034,26 @@ Select_LEFT_2 MACRO S
         JZ RIGHT_2
 		
         UP_2:
-		    MOV AL,W_LETTER_PER
-            MOV A_LETTER,AL
+		    MOV AL,UP_ARROW_PER
+            MOV LEFT_ARROW2,AL
             JMP END_IT
         
         DOWN_2:
-		    MOV AL,S_LETTER_PER
-            MOV A_LETTER,AL
+		    MOV AL,DOWN_ARROW_PER
+            MOV LEFT_ARROW2,AL
             JMP END_IT
 			
 		RIGHT_2:
-		    MOV AL,D_LETTER_PER
-            MOV A_LETTER,AL
+		    MOV AL,RIGHT_ARROW_PER
+            MOV LEFT_ARROW2,AL
             JMP END_IT
         		
-				
-		END_IT:		
-                      
+        END_IT:        
+		
    POPA
 ENDM Select_LEFT_2
 ;;--------------------------------------------
-;; CHANGE THE SCANCODE OF THE RIGHT KEY OF THE SECOND PLAYER (D) 
+;; CHANGE THE SCANCODE OF THE RIGHT KEY OF THE SECOND PLAYER 
 Select_RIGHT_2 MACRO S
    PUSHA
     LOCAL END_IT
@@ -1952,22 +2074,21 @@ Select_RIGHT_2 MACRO S
         JZ END_IT
 		
         UP_2:
-		    MOV AL,W_LETTER_PER
-            MOV D_LETTER,AL
+		    MOV AL,UP_ARROW_PER
+            MOV RIGHT_ARROW2,AL
             JMP END_IT
         
         DOWN_2:
-		    MOV AL,S_LETTER_PER
-            MOV D_LETTER,AL
+		    MOV AL,DOWN_ARROW_PER
+            MOV RIGHT_ARROW2,AL
             JMP END_IT
 			
 		LEFT_2:
-		    MOV AL,A_LETTER_PER
-            MOV D_LETTER,AL
+		    MOV AL,LEFT_ARROW_PER
+            MOV RIGHT_ARROW2,AL
             JMP END_IT
-        		
-				
-		END_IT:		
+        
+        END_IT:		
                       
    POPA
 ENDM Select_RIGHT_2
@@ -2052,6 +2173,17 @@ RandUnique MACRO
     
     POPA
 ENDM	RandUnique
+
+RandInvert MACRO
+	PUSHA
+				
+		MOV RAND_1[0], 2
+		MOV RAND_1[1], 1
+		MOV RAND_1[2], 4
+		MOV RAND_1[3], 3
+	
+	POPA
+ENDM RandInvert
 
 ;-------------------------------------------
 ;; CHECK IF THERE IS A WINNER OR NOT YET
@@ -2429,16 +2561,20 @@ SendPlayerData MACRO
 		
 		;; START BY UPDATING PLAYER LOCATION
 		
-		LEA SI, X1
-		LEA DI, Y1
-		SEND X1
-		;; VERIFY SENDING BY RECEIVING IT
-		Receive SI
+		; LEA SI, X1
+		; LEA DI, Y1
+		; SEND X1
+		; VERIFY SENDING BY RECEIVING IT
+		; Receive SI
 		
-		SEND Y1
-		;; VERIFY SENDING BY RECEIVING IT
-		Receive DI
-
+		; SEND Y1
+		; VERIFY SENDING BY RECEIVING IT
+		; Receive DI
+		
+		SEND LOCAL_KEY
+		LEA SI, LOCAL_KEY
+		RECEIVE SI
+		MOV LOCAL_KEY, 0
 		
 		
 		; THEN SEND BOMBS COUNT
@@ -2480,33 +2616,36 @@ ENDM SendPlayerData
 ReceivePlayerData MACRO
 	PUSHA
 		
-		LOCAL CONTINUE
+		LEA DI, REMOTE_KEY
+		RECEIVE DI
+		SEND REMOTE_KEY
+		; LOCAL CONTINUE
 		
-		;; START BY RECEIVING PLAYER X, Y
-		LEA SI, X2
-		LEA DI, Y2
-		;Receive SI
-		Receive SI
-		;; VERIFY RECEIVING BY RESENDING IT
-		Send X2
-		Receive DI
-		;; VERIFY RECEIVING BY RESENDING IT
-		Send Y2
+		; START BY RECEIVING PLAYER X, Y
+		; LEA SI, X2
+		; LEA DI, Y2
+		; Receive SI
+		; Receive SI
+		; VERIFY RECEIVING BY RESENDING IT
+		; Send X2
+		; Receive DI
+		; VERIFY RECEIVING BY RESENDING IT
+		; Send Y2
 		
-		;; VALIDATE NEW COORDINATES
-		MOV AL, X2
-		SUB AL, OLD_X2
-		MOV AH, Y2
-		SUB AH, OLD_Y2
-		AND AL, AH
-		JZ CONTINUE
-		;Receive SI
-		MOV AL, OLD_X2
-		MOV X2, AL
-		MOV AH, OLD_Y2
-		MOV Y2, AH
+		; VALIDATE NEW COORDINATES
+		; MOV AL, X2
+		; SUB AL, OLD_X2
+		; MOV AH, Y2
+		; SUB AH, OLD_Y2
+		; AND AL, AH
+		; JZ CONTINUE
+		; Receive SI
+		; MOV AL, OLD_X2
+		; MOV X2, AL
+		; MOV AH, OLD_Y2
+		; MOV Y2, AH
 		
-		CONTINUE:
+		; CONTINUE:
 		; THEN RECEIVE BOMBS COUNT
 		; LEA SI, B_COUNT
 		; Receive SI
