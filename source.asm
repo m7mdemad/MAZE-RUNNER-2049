@@ -208,6 +208,8 @@ MAIN    PROC FAR
 					JMP MAIN_LOOP
 				
 				GAMEPLAY_SCREEN:
+										Winner
+
 					DrawScorebar
 					SetNames
 					PrintPlayers
@@ -217,10 +219,10 @@ MAIN    PROC FAR
 					ExchangePlayerData	
 					
 
-					 TestBombs 1,X1,Y1
-					 TestBombs 2,X2,Y2
+					TestBombs 1,X1,Y1
+					TestBombs 2,X2,Y2
 
-					 CheckBombs 
+					CheckBombs 
 
 					SetScore
 					

@@ -736,6 +736,8 @@ HandlePlayerMovement MACRO
 		CMP AH, RIGHT_ARROW1
 		JZ MOVE_RIGHT1
 		
+		JMP CONTINUE
+		
 		;; if not caught until here, ignore it because it's a bad key
 		
 		MOVE_UP1:
@@ -2687,7 +2689,6 @@ ExchangePlayerData MACRO
 		
 		; else, send first
 		SendPlayerData		
-		Winner
 		ReceivePlayerData
 		
 		JMP END_IT
@@ -2696,7 +2697,6 @@ ExchangePlayerData MACRO
 			ReceivePlayerData
 			SendPlayerData
 			
-					Winner
 		
 		END_IT:
 	
