@@ -1337,7 +1337,7 @@ HandlePlayerFire MACRO
 		
 		MOV AL,FIRE_DELAY
 		
-		CMP AH, M_LETTER
+		CMP AH, INSERT_KEY
 		JZ FIRE1
 		
 		JMP CONTINUE
@@ -1373,7 +1373,7 @@ HandleRemoteFire MACRO
 		
 		MOV AL,FIRE_DELAY
 		
-		CMP REMOTE_KEY, M_LETTER
+		CMP REMOTE_KEY, INSERT_KEY
 		JZ FIRE2
 		
 		JMP CONTINUE
@@ -1569,8 +1569,9 @@ TestBombs MACRO S,X,Y
 		   Explode CX,2
 		   JMP NEXT
 		   
-		   
-        EX_1:   Explode CX,1
+			
+        EX_1:   
+				Explode CX,1
 		        JMP NEXT
 		   
        NEXT:
@@ -1695,8 +1696,7 @@ Bang MACRO S
 	LOCAL END_IT
 		
 		MOV AL, MOTION_DELAY
-	    
-		CMP S,1
+	    CMP S,1
         JNZ P_2
 		
 		;; SHUFFLE THE CONTROLS OF PLAYER1
@@ -1725,14 +1725,17 @@ Shuffle1 MACRO
         
 
 		;; randomize numbers with uniqueness
+		RandInvert
 		
-		Select_UP_1 2
-
-		Select_DOWN_1 1
-
-		Select_LEFT_1 4
-		  
-		Select_RIGHT_1 3	
+		LEA SI, RAND_1
+		
+		Select_UP_1 [SI]
+		INC SI
+		Select_DOWN_1 [SI]
+		INC SI
+		Select_LEFT_1 [SI]
+		INC SI
+		Select_RIGHT_1 [SI]	
 		
 	    
   POPA	
@@ -1905,15 +1908,20 @@ ENDM Select_RIGHT_1
 ;; SHUFFLE THE CONTROLS OF THE SECOND PLAYER 
 Shuffle2 MACRO 
   PUSHA
-        
-		Select_UP_2 2
-
-		Select_DOWN_2 1
-
-		Select_LEFT_2 4
-		  
-		Select_RIGHT_2 3			
-	    
+  
+		;; randomize numbers with uniqueness
+		RandInvert
+		
+		LEA SI, RAND_1
+		
+		Select_UP_2 [SI]
+		INC SI
+		Select_DOWN_2 [SI]
+		INC SI
+		Select_LEFT_2 [SI]
+		INC SI
+		Select_RIGHT_2 [SI]	
+			    
   POPA	
 ENDM Shuffle2
 ;---------------------------------------

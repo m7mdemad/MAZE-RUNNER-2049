@@ -128,8 +128,7 @@ RIGHT_ARROW_PER		EQU		4DH
 LEFT_ARROW_PER		EQU		4BH
 
 
-F_LETTER		    EQU		21H
-M_LETTER		    EQU		32H
+INSERT_KEY		    EQU		52H
 
 REMOTE_KEY			DB		0
 LOCAL_KEY			DB		0    
@@ -211,7 +210,6 @@ MAIN    PROC FAR
 				GAMEPLAY_SCREEN:
 					DrawScorebar
 					SetNames
-
 					PrintPlayers
 					PrintBombs  
 					DetectAction
